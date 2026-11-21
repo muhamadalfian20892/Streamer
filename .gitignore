@@ -10,6 +10,8 @@ venv/
 .mypy_cache/
 dist/
 build/
+*.zip
+*.7z
 
 # Application runtime outputs
 now_playing.txt

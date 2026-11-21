@@ -46,14 +46,32 @@ def show_getting_started_wizard(parent, config):
 
 def show_readme_dialog(parent):
     """Opens interactive guide dialog in the active language."""
+    import sys
     lang = i18n.get_language()
     filename = "readme_en.txt" if lang == "en" else "readme.txt"
-    readme_path = os.path.join(os.path.dirname(__file__), filename)
-    fallback_path = os.path.join(os.path.dirname(__file__), "readme.txt")
+    base_dirs = [
+        getattr(sys, '_MEIPASS', ''),
+        os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else '',
+        os.path.dirname(os.path.abspath(__file__)),
+        os.getcwd()
+    ]
+    target_path = None
+    for b in base_dirs:
+        if b:
+            p = os.path.join(b, filename)
+            if os.path.exists(p):
+                target_path = p
+                break
+    if not target_path:
+        for b in base_dirs:
+            if b:
+                p = os.path.join(b, "readme.txt")
+                if os.path.exists(p):
+                    target_path = p
+                    break
 
     content = ""
-    target_path = readme_path if os.path.exists(readme_path) else fallback_path
-    if os.path.exists(target_path):
+    if target_path and os.path.exists(target_path):
         try:
             with open(target_path, "r", encoding="utf-8") as f:
                 content = f.read()

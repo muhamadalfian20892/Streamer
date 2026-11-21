@@ -37,18 +37,21 @@ def load_nvda_dll():
         return
 
     try:
+        DLL_NAME = "nvdaControllerClient64.dll"
+        possible_paths = []
         if getattr(sys, 'frozen', False):
-            base_path = os.path.dirname(sys.executable)
+            if hasattr(sys, '_MEIPASS'):
+                possible_paths.append(os.path.join(sys._MEIPASS, DLL_NAME))
+                possible_paths.append(os.path.join(sys._MEIPASS, "libs", DLL_NAME))
+            exe_dir = os.path.dirname(sys.executable)
+            possible_paths.append(os.path.join(exe_dir, DLL_NAME))
+            possible_paths.append(os.path.join(exe_dir, "_internal", DLL_NAME))
+            possible_paths.append(os.path.join(exe_dir, "libs", DLL_NAME))
         else:
             base_path = os.path.dirname(os.path.abspath(__file__))
-        
-        DLL_NAME = "nvdaControllerClient64.dll"
-        
-        possible_paths = [
-            os.path.join(base_path, DLL_NAME),
-            os.path.join(base_path, "libs", DLL_NAME),
-            DLL_NAME
-        ]
+            possible_paths.append(os.path.join(base_path, DLL_NAME))
+            possible_paths.append(os.path.join(base_path, "libs", DLL_NAME))
+        possible_paths.append(DLL_NAME)
 
         for path in possible_paths:
             if os.path.exists(path) or path == DLL_NAME:

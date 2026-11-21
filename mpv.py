@@ -29,9 +29,32 @@ import re
 import traceback
 
 if os.name == "nt":
+    candidates = []
+    if getattr(sys, 'frozen', False):
+        if hasattr(sys, '_MEIPASS'):
+            candidates.append(sys._MEIPASS)
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(exe_dir)
+        candidates.append(os.path.join(exe_dir, "_internal"))
+    else:
+        candidates.append(os.path.dirname(os.path.abspath(__file__)))
+    candidates.append(os.getcwd())
+
     if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-        os.add_dll_directory(os.getcwd())
+        for c in candidates:
+            try:
+                if os.path.isdir(c):
+                    os.add_dll_directory(c)
+            except Exception:
+                pass
+
     dll = "mpv.dll"
+    for c in candidates:
+        target = os.path.join(c, "mpv.dll")
+        if os.path.exists(target):
+            dll = target
+            break
+
     backend = cdll.LoadLibrary(dll)
     fs_enc = "utf-8"
 else:
