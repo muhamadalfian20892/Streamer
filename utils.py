@@ -1,6 +1,6 @@
 import os
 import json
-import time
+import copy
 
 CONFIG_FILE = "config.json"
 
@@ -8,8 +8,13 @@ DEFAULT_CONFIG = {
     "recent_folders": [],
     "last_folder": "",
     "volume": 100,
+    "muted": False,
     "loop": False,
     "last_audio_device": "auto",
+    "app_mode": "standard",
+    "equalizer": "flat",
+    "mono": False,
+    "normalize": False,
     "nvda_verbose": True,
     "volume_step": 1,
     "seek_step": 5,
@@ -28,13 +33,12 @@ DEFAULT_CONFIG = {
 }
 
 def load_config():
-    """Loads configuration from JSON file."""
-    import copy
+    """Loads configuration from JSON file, merging with default settings."""
     if not os.path.exists(CONFIG_FILE):
         return copy.deepcopy(DEFAULT_CONFIG)
     
     try:
-        with open(CONFIG_FILE, 'r') as f:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             config = json.load(f)
             # Merge with defaults to ensure all keys exist
             for key, value in DEFAULT_CONFIG.items():
@@ -45,12 +49,40 @@ def load_config():
         return copy.deepcopy(DEFAULT_CONFIG)
 
 def save_config(config):
-    """Saves configuration to JSON file."""
+    """Saves configuration atomically to JSON file using a temp file and os.replace."""
+    temp_file = f"{CONFIG_FILE}.tmp"
     try:
-        with open(CONFIG_FILE, 'w') as f:
+        with open(temp_file, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temp_file, CONFIG_FILE)
     except Exception as e:
         print(f"Error saving config: {e}")
+        if os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+            except OSError:
+                pass
+
+def save_setting(key, value):
+    """Persists a single setting atomically into config.json."""
+    config = load_config()
+    config[key] = value
+    save_config(config)
+    return config
+
+def save_volume(volume):
+    """Saves output volume into config.json."""
+    return save_setting("volume", volume)
+
+def save_audio_device(device_name):
+    """Saves output audio device into config.json."""
+    return save_setting("last_audio_device", device_name)
+
+def save_muted(muted):
+    """Saves muted state into config.json."""
+    return save_setting("muted", bool(muted))
 
 def add_recent_folder(config, path):
     """Adds a path to recent folders list, keeping it unique and limited to 10."""

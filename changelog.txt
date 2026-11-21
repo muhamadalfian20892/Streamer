@@ -1,16 +1,90 @@
-Baru pada 11/06/2026:
-
-baru pada 10/06/2026:
-
-ada Settings Panel baru (bisa dibuka lewat Ctrl+P). Di sini kalian bisa bebas kustomisasi banyak hal. Mulai dari ngatur seberapa besar lompatan volume dan durasi lagu, sampai opsi buat nginget folder terakhir pas aplikasi baru dibuka. Dan yang paling keren, aplikasinya bakal otomatis nge-save dan nerapin settingan detik itu juga pas kalian ubah, tanpa perlu repot-repot restart!
-
-Bagian Aksesibilitas buat pengguna NVDA juga udah aku upgrade gila-gilaan. Semua nama folder sekarang bersih dari tanda kurung siku `[]`, tapi tetep kebaca sebagai folder oleh sistem. Aku nambahin sistem embed label ke elemen UI-nya biar NVDA ngebaca semuanya jauh lebih rapi dan jelas. Terus, aplikasinya sekarang bakal otomatis ngasih tau progres kalau kalian ganti volume atau nyepetin lagu. Kalau kalian lagi nggak pengen diganggu sama pengumuman ini, langsung aja matiin opsi "NVDA Verbose" dari Settings!
-
-Yang nggak kalah keren, aku nambahin sistem Audio Fading! Kalau kalian lagi muter lagu terus milih lagu baru, suaranya bakal mengecil halus (fade out) dulu sebelum lagunya ganti, jadi nggak ngagetin. Sistem fading ini juga jalan pas kalian tekan tombol Pause dan Play. Waktu di-pause, suaranya bakal fade out sampai habis, dan waktu di-play lagi, suaranya bakal fade in merangkak naik persis ke volume aslinya. Durasi fading-nya juga bisa kalian atur sebebasnya di Settings. Oh ya, aku juga udah ngeberesin bug kritis yang bikin MPV suka nyangkut di memori waktu aplikasinya ditutup. Pokoknya update kali ini bener-bener mulus!
+Catatan Perubahan (Changelog)
 
 ================================================================================
+Baru pada 11/06/2026:
+Pembaruan besar ini membawa lebih dari 40 peningkatan, penambahan fitur pemutar musik, penyempurnaan aksesibilitas pembaca layar, dan penguatan stabilitas sistem:
 
-baru pada 06/10/2026:
+1. Mode Antarmuka (Standard Mode dan Advanced Mode):
+   - Mode Standar (Standard Mode): Menghadirkan antarmuka pemutar musik yang bersih, terfokus, dan minimalis. Cocok untuk penggunaan sehari-hari mendengarkan audio.
+   - Sembunyikan Panel Siaran: Pada Mode Standar, fitur broadcast lanjutan (ekspor OBS, stream marker, soundboard) disembunyikan agar tampilan tetap rapi.
+   - Mode Lanjutan (Advanced Mode): Menyediakan kontrol lengkap bagi streamer dan penyiar audio, termasuk penanda streaming dan integrasi soundboard.
+   - Persistensi Mode: Pilihan mode antarmuka tersimpan otomatis di konfigurasi dan langsung diterapkan tanpa perlu memulai ulang aplikasi.
+
+2. Kontrol Pemutaran dan Navigasi:
+   - Tombol Stop Khusus: Menghentikan pemutaran musik secara tuntas dan mengembalikan posisi ke awal lagu.
+   - Tombol Lagu Sebelumnya (Previous Track): Berpindah dan memutar berkas audio sebelumnya pada daftar secara langsung.
+   - Tombol Lagu Berikutnya (Next Track): Berpindah dan memutar berkas audio selanjutnya pada daftar secara langsung.
+   - Tombol Mute (Senyapkan Suara): Tombol pengalih cepat untuk mematikan atau mengembalikan volume suara ke level sebelumnya.
+   - Tombol Acak (Shuffle Mode): Memungkinkan pemutaran lagu secara acak dari folder yang sedang dibuka.
+   - Slider Pemosisian (Seek Slider): Slider interaktif untuk melihat posisi lagu dan melompat ke detik yang diinginkan dengan presisi.
+   - Pengalih Tampilan Waktu: Kemampuan beralih antara waktu yang telah berlalu (elapsed time) dan sisa waktu lagu (remaining time).
+   - Dukungan Drag and Drop: Berkas audio atau folder dapat langsung diseret dan dilepas ke dalam jendela aplikasi untuk langsung dibuka.
+   - Bilah Status Informatif (Status Bar): Menampilkan jumlah total lagu, level volume terkini, status pemutaran, dan mode yang sedang aktif.
+
+3. Kualitas dan Pemrosesan Audio (DSP dan Equalizer):
+   - Equalizer Bawaan: Pilihan preset suara untuk Flat, Bass Boost, Treble Boost, dan Vocal.
+   - Penerapan Instan: Perubahan equalizer langsung diterapkan ke engine MPV tanpa memutus aliran audio yang sedang berputar.
+   - Normalisasi Audio (Audio Normalization): Opsi filter audio untuk meratakan tingkat kenyaringan antar lagu yang berbeda volume rekaman.
+   - Downmix Mono: Opsi penggabungan saluran stereo menjadi mono (pan=mono), bermanfaat saat mendengarkan melalui satu earphone atau pengeras suara tunggal.
+   - Pemindaian Perangkat Dinamis: Pendeteksian sound card dan perangkat output audio yang terhubung secara otomatis saat runtime.
+   - Fallback Perangkat Otomatis: Jika perangkat audio yang sebelumnya disimpan dicabut atau hilang, sistem otomatis beralih ke perangkat standar (auto) tanpa menyebabkan error.
+
+4. Penyimpanan dan Konfigurasi yang Tangguh:
+   - Simpan Volume Otomatis: Setiap kali slider volume digeser, nilai volume baru langsung disimpan ke berkas konfigurasi.
+   - Simpan Perangkat Audio Otomatis: Pilihan perangkat suara pada dropdown langsung tersimpan saat diubah oleh pengguna.
+   - Pemulihan Pengaturan saat Membuka Aplikasi: Volume dan perangkat audio terakhir otomatis dipulihkan persis seperti saat aplikasi terakhir digunakan.
+   - Penyimpanan Atomik (Atomic File Saving): Berkas config.json kini ditulis ke berkas sementara terlebih dahulu sebelum diganti menggunakan os.replace, mencegah kerusakan berkas konfigurasi jika sistem mati mendadak.
+   - Nilai Bawaan Lengkap: Konfigurasi default diperbarui dengan opsi mode aplikasi, equalizer, mono, normalisasi, dan status senyap.
+
+5. Aksesibilitas Penuh untuk Pembaca Layar (NVDA dan SAPI):
+   - Pelabelan Aksesibel 100 Persen: Seluruh kontrol antarmuka (tombol, slider, kotak centang, dropdown, kolom daftar) memiliki nama aksesibel eksplisit melalui fungsi SetName().
+   - Tooltip Informatif: Setiap tombol dan elemen input dilengkapi teks tooltip deskriptif yang terbaca oleh pembaca layar.
+   - Pilihan Tingkat Verbositas Suara (Speech Verbosity): Opsi Verbose (membacakan seluruh pembaruan), Minimal (hanya mengumumkan peristiwa penting), dan Silent (tanpa pengumuman suara).
+   - Isyarat Suara Batas Daftar (Boundary Earcons): Bunyi nada unik saat pengguna mencapai batas paling atas atau paling bawah pada daftar berkas, memberikan umpan balik spasial yang jelas.
+   - Fallback Anggun ke Microsoft SAPI: Jika NVDA tidak sedang berjalan di Windows, sistem otomatis beralih menggunakan mesin Microsoft SAPI agar informasi suara tetap dapat didengar.
+   - Navigasi Keyboard Penuh: Setiap fungsi utama aplikasi dapat diakses menggunakan keyboard standar melalui tombol Tab, Spasi, Enter, dan tombol panah.
+
+6. Fitur Pengelola Berkas dan Audio Lanjutan:
+   - Dialog Inspektur Metadata Audio (Audio Metadata Inspector): Jendela khusus untuk memeriksa rincian teknis berkas audio yang sedang diputar atau dipilih di daftar.
+   - Rincian Informasi Lengkap: Menampilkan nama berkas, format kontainer, codec audio, bitrate, jumlah saluran (stereo/mono), sample rate, durasi, ukuran berkas, lokasi path, serta tag judul, artis, dan album.
+   - Format Teks Ramah Pembaca Layar: Teks laporan metadata ditampilkan dalam area baca bertingkat yang dapat ditelusuri baris demi baris menggunakan panah atas dan bawah.
+   - Salin Informasi ke Clipboard: Tombol sekali klik untuk menyalin seluruh rangkuman metadata audio ke papan klip Windows.
+   - Pengelola Bookmark Audio (Bookmarks Manager): Fitur penanda waktu pada audio untuk menyimpan posisi detik penting pada suatu lagu atau rekaman.
+   - Lompat ke Titik Bookmark: Pengguna dapat memilih bookmark dan langsung melompat ke posisi pemutaran tersebut dengan menekan Enter.
+   - Pengelolaan Bookmark Lengkap: Kemampuan menambah bookmark baru pada posisi saat ini, menghapus penanda satuan, atau mengosongkan seluruh bookmark per berkas audio.
+   - Pewaktu Tidur di Latar Belakang (Sleep Timer): Menghitung mundur durasi waktu pemutaran (pilihan 15 menit, 30 menit, 45 menit, 60 menit, atau kustom) di thread latar belakang tanpa menghambat antarmuka.
+   - Integrasi Sleep Timer dengan Fading: Saat waktu tidur berakhir, audio akan mengecil secara halus sebelum pemutaran dihentikan, menjaga kenyamanan pendengar.
+
+7. Menu Bar dan Menu Konteks:
+   - Menu Bar Lengkap: Akses cepat melalui bilah menu yang mencakup Berkas, Pemutaran, Audio, Tampilan, Alat, dan Bantuan.
+   - Menu Konteks Klik Kanan: Menu konteks pada daftar berkas lagu untuk memudahkan operasi pemutaran dan berkas.
+   - Opsi Menu Konteks: Putar lagu terpilih, tambahkan ke favorit, buka dialog inspektur metadata, buka folder di Windows Explorer, dan salin path lengkap berkas ke clipboard.
+   - Aksesibilitas Tombol Menu: Menu konteks dapat dipicu menggunakan klik kanan mouse maupun tombol konteks (Apps key / Shift+F10) pada keyboard.
+
+8. Dialog Pengaturan (Settings Dialog) yang Tertata Rapi:
+   - Pengorganisasian Bagian: Dialog Pengaturan ditata ulang ke dalam seksi logis: Umum dan Mode, Pemutaran dan Navigasi, Audio dan Equalizer, Aksesibilitas dan Umpan Balik, serta Alat dan Pewaktu Tidur.
+   - Batas Volume Fleksibel: Pengguna dapat memilih batas volume maksimal antara 100 persen atau 150 persen (volume boost).
+   - Penyesuaian Langkah Navigasi: Pengaturan langkah kenaikan volume (volume step) dan langkah lompatan detik pemutaran (seek step).
+   - Pengingat Folder Terakhir: Opsi untuk otomatis membuka folder musik yang terakhir kali dimainkan saat aplikasi dijalankan kembali.
+   - Putar Otomatis (Autoplay): Opsi untuk otomatis melanjutkan pemutaran ke berkas lagu berikutnya saat lagu yang aktif selesai diputar.
+
+9. Optimalisasi Kinerja dan Penanganan Error:
+   - Pembersihan Thread Bersih: Thread latar belakang pada Audio Fader dan Sleep Timer dipastikan berhenti dengan tertib saat pemutaran berakhir atau saat aplikasi ditutup.
+   - Pencegahan Memory Leak: Instance engine MPV ditutup secara bersih sehingga tidak meninggalkan proses aktif yang membebani memori komputer.
+   - Penanganan Berkas Aman: Membaca daftar berkas pada folder secara aman, mencegah crash pada folder yang diproteksi izin akses Windows.
+   - Pengecekan Integritas Ekstensi: Mendukung daftar ekstensi audio dan video populer secara lengkap (MP3, WAV, FLAC, OGG, M4A, AAC, OPUS, MP4, MKV, WebM, dll).
+
+================================================================================
+Baru pada 10/06/2026:
+
+Ada Settings Panel baru (bisa dibuka lewat Ctrl+P). Di sini kalian bisa bebas kustomisasi banyak hal. Mulai dari mengatur seberapa besar lompatan volume dan durasi lagu, sampai opsi untuk mengingat folder terakhir saat aplikasi baru dibuka. Aplikasi otomatis menyimpan dan menerapkan pengaturan detik itu juga saat diubah, tanpa perlu memulai ulang.
+
+Bagian Aksesibilitas untuk pengguna NVDA juga ditingkatkan secara menyeluruh. Semua nama folder sekarang bersih dari tanda kurung siku `[]`, tetapi tetap terbaca sebagai folder oleh sistem. Ditambahkan sistem embed label ke elemen antarmuka agar NVDA membaca semuanya jauh lebih rapi dan jelas. Aplikasi sekarang otomatis memberitahukan progres saat mengubah volume atau mempercepat lagu. Jika tidak ingin mendengar pengumuman ini, opsi "NVDA Verbose" dapat dimatikan dari Settings.
+
+Ditambahkan juga sistem Audio Fading. Saat memutar lagu lalu memilih lagu baru, suara akan mengecil secara halus (fade out) terlebih dahulu sebelum lagu berganti. Sistem fading ini juga bekerja saat menekan tombol Pause dan Play. Saat di-pause, suara fade out hingga hening, dan saat di-play lagi, suara fade in perlahan naik persis ke volume awal. Durasi fading dapat diatur sesuai keinginan di Settings. Penanganan bug pada penutupan proses MPV di memori juga telah diperbaiki.
+
+================================================================================
+Baru pada 06/10/2026:
 - Fix: Error pemotongan nama folder yang memiliki karakter kurung siku `[]` di dalamnya.
 - Fix: Mencegah file yang kebetulan diawali karakter `[` dibaca sebagai direktori folder.
 - Fix: Mengatasi infinite loop dan reload berulang saat menekan tombol Backspace di root directory (misal `C:\`).

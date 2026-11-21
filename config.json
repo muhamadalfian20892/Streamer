@@ -12,8 +12,8 @@
         "C:\\Users\\fian\\Downloads\\sound acara sanlat"
     ],
     "last_folder": "C:\\Users\\fian\\Downloads\\acara bukan korupsi\\acara puncak",
-    "volume": 100,
-    "loop": false,
+    "volume": 77,
+    "loop": true,
     "last_audio_device": "auto",
     "nvda_verbose": true,
     "volume_step": 1,
@@ -29,5 +29,11 @@
     "obs_export": false,
     "favorites": [],
     "soundboard": {},
-    "first_time_setup": false
+    "first_time_setup": false,
+    "muted": true,
+    "app_mode": "standard",
+    "equalizer": "flat",
+    "mono": false,
+    "normalize": false,
+    "shuffle": true
 }
