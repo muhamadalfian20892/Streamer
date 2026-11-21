@@ -13,10 +13,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -36,7 +36,7 @@ jobs:
           Compress-Archive -Path "dist\Streamer\*" -DestinationPath "Streamer-${{ github.ref_name }}-win64.zip"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: Streamer ${{ github.ref_name }}
           files: Streamer-${{ github.ref_name }}-win64.zip
