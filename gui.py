@@ -5,6 +5,7 @@ import random
 import subprocess
 import accessibility
 import utils
+import i18n
 from player import Player
 import settings
 import fading
@@ -24,7 +25,7 @@ class MediaDropTarget(wx.FileDropTarget):
         first_item = filenames[0]
         if os.path.isdir(first_item):
             self.frame.load_folder(first_item)
-            self.frame.speak(f"Folder dimuat dari seret dan lepas: {os.path.basename(first_item)}")
+            self.frame.speak(i18n.t("spk_drag_folder", name=os.path.basename(first_item)))
             return True
         elif os.path.isfile(first_item):
             parent = os.path.dirname(first_item)
@@ -32,7 +33,7 @@ class MediaDropTarget(wx.FileDropTarget):
             self.frame.load_folder(parent)
             self.frame.select_file_by_name(name)
             self.frame.play_selected_item()
-            self.frame.speak(f"File diputar dari seret dan lepas: {name}")
+            self.frame.speak(i18n.t("spk_drag_file", name=name))
             return True
         return False
 
@@ -40,49 +41,49 @@ class MediaDropTarget(wx.FileDropTarget):
 class AudioMetadataDialog(wx.Dialog):
     """Accessible technical metadata dialog."""
     def __init__(self, parent, file_path, player=None):
-        super().__init__(parent, title="Rincian Informasi Audio", size=(520, 420))
+        super().__init__(parent, title=i18n.t("meta_title"), size=(520, 420))
         self.file_path = file_path
         self.player = player
         self.init_ui()
         self.CenterOnParent()
 
     def init_ui(self):
-        panel = wx.Panel(self, name="Panel Rincian Metadata Audio")
-        panel.SetName("Panel Rincian Metadata Audio")
-        panel.SetToolTip("Panel informasi teknis dan properti file audio")
+        panel = wx.Panel(self, name=i18n.t("meta_title"))
+        panel.SetName(i18n.t("meta_title"))
+        panel.SetToolTip(i18n.t("btn_inspector_tip"))
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         info_lines = []
         filename = os.path.basename(self.file_path)
-        info_lines.append(f"Nama File: {filename}")
-        info_lines.append(f"Lokasi: {os.path.dirname(self.file_path)}")
+        info_lines.append(i18n.t("meta_file_name", val=filename))
+        info_lines.append(i18n.t("meta_file_loc", val=os.path.dirname(self.file_path)))
 
         try:
             sz = os.path.getsize(self.file_path)
             if sz > 1024 * 1024:
-                info_lines.append(f"Ukuran File: {sz / (1024 * 1024):.2f} MB")
+                info_lines.append(i18n.t("meta_file_size", val=f"{sz / (1024 * 1024):.2f} MB"))
             else:
-                info_lines.append(f"Ukuran File: {sz / 1024:.1f} KB")
+                info_lines.append(i18n.t("meta_file_size", val=f"{sz / 1024:.1f} KB"))
         except Exception:
             pass
 
         ext = os.path.splitext(self.file_path)[1].upper()
-        info_lines.append(f"Format File: {ext.replace('.', '')}")
+        info_lines.append(i18n.t("meta_file_format", val=ext.replace('.', '')))
 
         if self.player and getattr(self.player, 'mp', None):
             try:
                 dur = self.player.get_duration()
                 if dur:
-                    info_lines.append(f"Durasi: {utils.format_time(dur)}")
+                    info_lines.append(i18n.t("meta_duration", val=utils.format_time(dur)))
                 audio_codec = getattr(self.player.mp, 'audio_codec_name', None)
                 if audio_codec:
-                    info_lines.append(f"Codec Audio: {audio_codec}")
+                    info_lines.append(i18n.t("meta_codec", val=audio_codec))
                 audio_params = getattr(self.player.mp, 'audio_params', None)
                 if isinstance(audio_params, dict):
                     if 'samplerate' in audio_params:
-                        info_lines.append(f"Sample Rate: {audio_params['samplerate']} Hz")
+                        info_lines.append(i18n.t("meta_samplerate", val=audio_params['samplerate']))
                     if 'channel-count' in audio_params:
-                        info_lines.append(f"Kanal Suara: {audio_params['channel-count']}")
+                        info_lines.append(i18n.t("meta_channels", val=audio_params['channel-count']))
             except Exception:
                 pass
 
@@ -91,29 +92,29 @@ class AudioMetadataDialog(wx.Dialog):
         self.text_ctrl = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="Informasi Teknis Audio"
+            name=i18n.t("meta_title")
         )
-        self.text_ctrl.SetName("Informasi Teknis Audio")
-        self.text_ctrl.SetToolTip("Gunakan tombol panah atas dan bawah untuk membaca informasi")
+        self.text_ctrl.SetName(i18n.t("meta_title"))
+        self.text_ctrl.SetToolTip(i18n.t("btn_inspector_tip"))
         self.text_ctrl.SetValue(content)
         sizer.Add(self.text_ctrl, 1, wx.EXPAND | wx.ALL, 10)
 
         btn_sizer = wx.StdDialogButtonSizer()
-        close_btn = wx.Button(panel, wx.ID_OK, label="Tutup", name="Tutup Dialog Informasi")
-        close_btn.SetName("Tutup Dialog Informasi")
-        close_btn.SetToolTip("Tutup jendela rincian informasi audio")
+        close_btn = wx.Button(panel, wx.ID_OK, label=i18n.t("btn_close"), name=i18n.t("btn_close"))
+        close_btn.SetName(i18n.t("btn_close"))
+        close_btn.SetToolTip(i18n.t("btn_close"))
         btn_sizer.AddButton(close_btn)
         btn_sizer.Realize()
         sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
 
         panel.SetSizer(sizer)
-        accessibility.speak(f"Informasi file audio {filename} terbuka.")
+        accessibility.speak(i18n.t("spk_meta_opened", name=filename))
 
 
 class BookmarksDialog(wx.Dialog):
     """Accessible bookmarks manager dialog."""
     def __init__(self, parent):
-        super().__init__(parent, title="Pengelola Bookmark Waktu", size=(500, 420))
+        super().__init__(parent, title=i18n.t("bm_title"), size=(500, 420))
         self.parent_frame = parent
         self.config = parent.config
         self.bookmarks = self.config.get("bookmarks", {})
@@ -121,40 +122,40 @@ class BookmarksDialog(wx.Dialog):
         self.CenterOnParent()
 
     def init_ui(self):
-        panel = wx.Panel(self, name="Panel Pengelola Bookmark")
-        panel.SetName("Panel Pengelola Bookmark")
-        panel.SetToolTip("Panel daftar bookmark penanda waktu")
+        panel = wx.Panel(self, name=i18n.t("bm_title"))
+        panel.SetName(i18n.t("bm_title"))
+        panel.SetToolTip(i18n.t("btn_bookmarks_tip"))
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        lbl = wx.StaticText(panel, label="Daftar Bookmark:")
-        lbl.SetName("Label Daftar Bookmark")
-        lbl.SetToolTip("Penanda waktu yang tersimpan untuk file saat ini")
+        lbl = wx.StaticText(panel, label=i18n.t("bm_list_label"))
+        lbl.SetName(i18n.t("bm_list_label"))
+        lbl.SetToolTip(i18n.t("btn_bookmarks_tip"))
         sizer.Add(lbl, 0, wx.LEFT | wx.TOP, 10)
 
-        self.list_box = wx.ListBox(panel, name="Daftar Penanda Waktu", style=wx.LB_SINGLE)
-        self.list_box.SetName("Daftar Penanda Waktu")
-        self.list_box.SetToolTip("Daftar penanda waktu. Pilih untuk melompat atau menghapus.")
+        self.list_box = wx.ListBox(panel, name=i18n.t("bm_title"), style=wx.LB_SINGLE)
+        self.list_box.SetName(i18n.t("bm_title"))
+        self.list_box.SetToolTip(i18n.t("btn_bookmarks_tip"))
         sizer.Add(self.list_box, 1, wx.EXPAND | wx.ALL, 10)
 
         self.refresh_list()
 
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.add_btn = wx.Button(panel, label="Tambah Posisi Ini", name="Tambah Penanda")
-        self.add_btn.SetName("Tambah Penanda")
-        self.add_btn.SetToolTip("Simpan posisi waktu pemutaran saat ini sebagai bookmark")
+        self.add_btn = wx.Button(panel, label=i18n.t("btn_bm_add"), name=i18n.t("btn_bm_add"))
+        self.add_btn.SetName(i18n.t("btn_bm_add"))
+        self.add_btn.SetToolTip(i18n.t("btn_bm_add_tip"))
 
-        self.jump_btn = wx.Button(panel, label="Lompat ke Posisi", name="Lompat ke Bookmark")
-        self.jump_btn.SetName("Lompat ke Bookmark")
-        self.jump_btn.SetToolTip("Pindahkan pemutaran ke bookmark yang dipilih")
+        self.jump_btn = wx.Button(panel, label=i18n.t("btn_bm_jump"), name=i18n.t("btn_bm_jump"))
+        self.jump_btn.SetName(i18n.t("btn_bm_jump"))
+        self.jump_btn.SetToolTip(i18n.t("btn_bm_jump_tip"))
 
-        self.del_btn = wx.Button(panel, label="Hapus", name="Hapus Bookmark")
-        self.del_btn.SetName("Hapus Bookmark")
-        self.del_btn.SetToolTip("Hapus bookmark yang dipilih dari daftar")
+        self.del_btn = wx.Button(panel, label=i18n.t("btn_bm_del"), name=i18n.t("btn_bm_del"))
+        self.del_btn.SetName(i18n.t("btn_bm_del"))
+        self.del_btn.SetToolTip(i18n.t("btn_bm_del_tip"))
 
-        close_btn = wx.Button(panel, wx.ID_CANCEL, label="Tutup", name="Tutup Bookmark")
-        close_btn.SetName("Tutup Bookmark")
-        close_btn.SetToolTip("Tutup jendela pengelola bookmark")
+        close_btn = wx.Button(panel, wx.ID_CANCEL, label=i18n.t("btn_close"), name=i18n.t("btn_close"))
+        close_btn.SetName(i18n.t("btn_close"))
+        close_btn.SetToolTip(i18n.t("btn_close"))
 
         btn_sizer.Add(self.add_btn, 0, wx.RIGHT, 5)
         btn_sizer.Add(self.jump_btn, 0, wx.RIGHT, 5)
@@ -188,14 +189,15 @@ class BookmarksDialog(wx.Dialog):
         if file_key not in self.bookmarks:
             self.bookmarks[file_key] = []
 
-        dlg = wx.TextEntryDialog(self, "Nama penanda:", "Tambah Bookmark", f"Penanda {len(self.bookmarks[file_key]) + 1}")
+        count = len(self.bookmarks[file_key]) + 1
+        dlg = wx.TextEntryDialog(self, i18n.t("bm_prompt_desc", time=utils.format_time(pos)), i18n.t("bm_prompt_title"), f"Bookmark {count}")
         if dlg.ShowModal() == wx.ID_OK:
-            label = dlg.GetValue().strip() or "Bookmark"
+            label = dlg.GetValue().strip() or f"Bookmark {count}"
             self.bookmarks[file_key].append({"time": pos, "label": label})
             self.config["bookmarks"] = self.bookmarks
             utils.save_config(self.config)
             self.refresh_list()
-            accessibility.speak(f"Bookmark {label} disimpan pada waktu {utils.format_time(pos)}")
+            accessibility.speak(i18n.t("spk_bookmark_added", time=utils.format_time(pos)))
         dlg.Destroy()
 
     def on_jump(self, event):
@@ -211,7 +213,7 @@ class BookmarksDialog(wx.Dialog):
                     except Exception:
                         curr = self.parent_frame.player.get_time_pos() or 0
                         self.parent_frame.player.seek(pos - curr)
-                accessibility.speak(f"Melompat ke posisi {utils.format_time(pos)}")
+                accessibility.speak(i18n.t("spk_jump_to", time=utils.format_time(pos)))
 
     def on_delete(self, event):
         idx = self.list_box.GetSelection()
@@ -222,14 +224,15 @@ class BookmarksDialog(wx.Dialog):
                 self.config["bookmarks"] = self.bookmarks
                 utils.save_config(self.config)
                 self.refresh_list()
-                accessibility.speak("Bookmark berhasil dihapus")
+                accessibility.speak(i18n.t("spk_bookmark_deleted"))
 
 
 class StreamerFrame(wx.Frame):
     def __init__(self):
-        super().__init__(None, title="Streamer App", size=(900, 680))
-
         self.config = utils.load_config()
+        i18n.init_language(self.config)
+        super().__init__(None, title=i18n.t("app_title"), size=(900, 680))
+
         self.player = None
         self.fader = None
         self.current_folder = ""
@@ -251,6 +254,9 @@ class StreamerFrame(wx.Frame):
         self.init_shortcuts()
         self.bind_events()
         self.init_drag_and_drop()
+
+        i18n.register_listener(self.on_i18n_language_changed)
+        self.retranslate_ui()
 
         try:
             # Pass the video panel's window handle to the player
@@ -292,6 +298,7 @@ class StreamerFrame(wx.Frame):
             accessibility.speak(text)
 
     def on_close(self, event):
+        i18n.unregister_listener(self.on_i18n_language_changed)
         if hasattr(self, 'stream_features'):
             self.stream_features.unregister_global_hotkeys()
         if self.fader:
@@ -346,28 +353,32 @@ class StreamerFrame(wx.Frame):
         # --- Search and Filter Section ---
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        search_label = wx.StaticText(panel, label="Cari:", name="Label Kotak Pencarian")
-        search_label.SetName("Label Kotak Pencarian")
-        search_label.SetToolTip("Label untuk kotak pencarian")
+        self.search_label = wx.StaticText(panel, label=i18n.t("label_search"), name="Label Kotak Pencarian")
+        self.search_label.SetName("Label Kotak Pencarian")
+        self.search_label.SetToolTip(i18n.t("label_search_tip"))
 
         self.search_ctrl = wx.SearchCtrl(panel, style=wx.TE_PROCESS_ENTER, name="Kotak Pencarian File")
         self.search_ctrl.SetName("Kotak Pencarian File")
-        self.search_ctrl.SetToolTip("Ketik kata kunci untuk menyaring nama file secara instan")
+        self.search_ctrl.SetToolTip(i18n.t("search_tip"))
         self.search_ctrl.ShowSearchButton(True)
         self.search_ctrl.ShowCancelButton(True)
 
-        filter_label = wx.StaticText(panel, label="Filter Tampilan:", name="Label Filter Tampilan")
-        filter_label.SetName("Label Filter Tampilan")
-        filter_label.SetToolTip("Label untuk filter tampilan file dan folder")
+        self.filter_label = wx.StaticText(panel, label=i18n.t("label_view_filter"), name="Label Filter Tampilan")
+        self.filter_label.SetName("Label Filter Tampilan")
+        self.filter_label.SetToolTip(i18n.t("label_view_filter_tip"))
 
-        self.view_filter = wx.Choice(panel, choices=["All", "Files Only", "Folders Only"], name="Filter Tampilan File")
+        self.view_filter = wx.Choice(
+            panel,
+            choices=[i18n.t("filter_all"), i18n.t("filter_files"), i18n.t("filter_folders")],
+            name="Filter Tampilan File"
+        )
         self.view_filter.SetName("Filter Tampilan File")
-        self.view_filter.SetToolTip("Saring tampilan antara semua item, hanya file media, atau hanya folder")
+        self.view_filter.SetToolTip(i18n.t("view_filter_tip"))
         self.view_filter.SetSelection(0)
 
-        search_sizer.Add(search_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.LEFT, 5)
+        search_sizer.Add(self.search_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.LEFT, 5)
         search_sizer.Add(self.search_ctrl, 1, wx.EXPAND | wx.ALL, 5)
-        search_sizer.Add(filter_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.LEFT, 5)
+        search_sizer.Add(self.filter_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.LEFT, 5)
         search_sizer.Add(self.view_filter, 0, wx.EXPAND | wx.ALL, 5)
 
         main_sizer.Add(search_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -463,26 +474,26 @@ class StreamerFrame(wx.Frame):
         # 3. Volume and Audio Device Row
         vol_dev_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        vol_label = wx.StaticText(panel, label="Volume:", name="Label Volume Suara")
-        vol_label.SetName("Label Volume Suara")
-        vol_label.SetToolTip("Label volume suara pemutar")
+        self.vol_label = wx.StaticText(panel, label=i18n.t("label_volume"), name="Label Volume Suara")
+        self.vol_label.SetName("Label Volume Suara")
+        self.vol_label.SetToolTip(i18n.t("label_volume_tip"))
 
         max_vol = self.config.get("volume_max", 150)
         self.vol_slider = wx.Slider(panel, value=100, minValue=0, maxValue=max_vol, style=wx.SL_HORIZONTAL, name="Slider Volume Suara")
         self.vol_slider.SetName("Slider Volume Suara")
-        self.vol_slider.SetToolTip("Atur tingkat volume suara (0 sampai 150%)")
+        self.vol_slider.SetToolTip(i18n.t("slider_volume_tip"))
 
-        dev_label = wx.StaticText(panel, label="Perangkat Audio:", name="Label Perangkat Audio")
-        dev_label.SetName("Label Perangkat Audio")
-        dev_label.SetToolTip("Label perangkat output suara")
+        self.dev_label = wx.StaticText(panel, label=i18n.t("label_device"), name="Label Perangkat Audio")
+        self.dev_label.SetName("Label Perangkat Audio")
+        self.dev_label.SetToolTip(i18n.t("label_device_tip"))
 
         self.device_choice = wx.Choice(panel, name="Pilihan Perangkat Audio")
         self.device_choice.SetName("Pilihan Perangkat Audio")
-        self.device_choice.SetToolTip("Pilih perangkat output suara yang digunakan")
+        self.device_choice.SetToolTip(i18n.t("choice_device_tip"))
 
-        vol_dev_sizer.Add(vol_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        vol_dev_sizer.Add(self.vol_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         vol_dev_sizer.Add(self.vol_slider, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 15)
-        vol_dev_sizer.Add(dev_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        vol_dev_sizer.Add(self.dev_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         vol_dev_sizer.Add(self.device_choice, 1, wx.ALIGN_CENTER_VERTICAL)
 
         main_sizer.Add(vol_dev_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -492,30 +503,30 @@ class StreamerFrame(wx.Frame):
         self.advanced_panel.SetName("Panel Fitur Lanjutan Streamer")
         self.advanced_panel.SetToolTip("Panel fitur khusus streamer: penanda streaming, bookmark, dan efek audio")
 
-        adv_box = wx.StaticBox(self.advanced_panel, label="Fitur Lanjutan Streamer")
-        adv_box.SetName("Kotak Fitur Lanjutan Streamer")
-        adv_sizer = wx.StaticBoxSizer(adv_box, wx.VERTICAL)
+        self.adv_box = wx.StaticBox(self.advanced_panel, label=i18n.t("adv_box_label"))
+        self.adv_box.SetName("Kotak Fitur Lanjutan Streamer")
+        adv_sizer = wx.StaticBoxSizer(self.adv_box, wx.VERTICAL)
 
         adv_row1 = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.marker_btn = wx.Button(self.advanced_panel, label="Penanda Stream (F9)", name="Tambah Penanda Streaming")
+        self.marker_btn = wx.Button(self.advanced_panel, label=i18n.t("btn_marker"), name="Tambah Penanda Streaming")
         self.marker_btn.SetName("Tambah Penanda Streaming")
-        self.marker_btn.SetToolTip("Catat stempel waktu streaming saat ini ke file stream_timestamps.txt (F9)")
+        self.marker_btn.SetToolTip(i18n.t("btn_marker_tip"))
         adv_row1.Add(self.marker_btn, 1, wx.ALL, 3)
 
-        self.bookmark_btn = wx.Button(self.advanced_panel, label="Bookmarks", name="Pengelola Bookmark")
+        self.bookmark_btn = wx.Button(self.advanced_panel, label=i18n.t("btn_bookmarks"), name="Pengelola Bookmark")
         self.bookmark_btn.SetName("Pengelola Bookmark")
-        self.bookmark_btn.SetToolTip("Kelola dan lompat ke penanda waktu yang disimpan")
+        self.bookmark_btn.SetToolTip(i18n.t("btn_bookmarks_tip"))
         adv_row1.Add(self.bookmark_btn, 1, wx.ALL, 3)
 
-        self.inspector_btn = wx.Button(self.advanced_panel, label="Info Metadata", name="Inspektur Metadata Audio")
+        self.inspector_btn = wx.Button(self.advanced_panel, label=i18n.t("btn_inspector"), name="Inspektur Metadata Audio")
         self.inspector_btn.SetName("Inspektur Metadata Audio")
-        self.inspector_btn.SetToolTip("Buka rincian informasi teknis dan metadata file audio")
+        self.inspector_btn.SetToolTip(i18n.t("btn_inspector_tip"))
         adv_row1.Add(self.inspector_btn, 1, wx.ALL, 3)
 
-        self.obs_chk = wx.CheckBox(self.advanced_panel, label="Ekspor Teks OBS", name="Ekspor Teks OBS")
+        self.obs_chk = wx.CheckBox(self.advanced_panel, label=i18n.t("chk_obs"), name="Ekspor Teks OBS")
         self.obs_chk.SetName("Ekspor Teks OBS")
-        self.obs_chk.SetToolTip("Tulis judul lagu yang sedang diputar ke file now_playing.txt untuk OBS Studio")
+        self.obs_chk.SetToolTip(i18n.t("chk_obs_tip"))
         self.obs_chk.SetValue(self.config.get("obs_export", False))
         adv_row1.Add(self.obs_chk, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
@@ -523,25 +534,25 @@ class StreamerFrame(wx.Frame):
 
         adv_row2 = wx.BoxSizer(wx.HORIZONTAL)
 
-        eq_label = wx.StaticText(self.advanced_panel, label="Equalizer:", name="Label Preset Equalizer")
-        eq_label.SetName("Label Preset Equalizer")
-        eq_label.SetToolTip("Label pilihan equalizer")
-        adv_row2.Add(eq_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        self.eq_label = wx.StaticText(self.advanced_panel, label=i18n.t("label_eq"), name="Label Preset Equalizer")
+        self.eq_label.SetName("Label Preset Equalizer")
+        self.eq_label.SetToolTip(i18n.t("label_eq_tip"))
+        adv_row2.Add(self.eq_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         self.eq_choice = wx.Choice(self.advanced_panel, choices=["Flat", "Bass Boost", "Treble Boost", "Vocal"], name="Preset Equalizer")
         self.eq_choice.SetName("Preset Equalizer")
-        self.eq_choice.SetToolTip("Pilih profil equalizer audio")
+        self.eq_choice.SetToolTip(i18n.t("choice_eq_tip"))
         adv_row2.Add(self.eq_choice, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
 
-        self.chk_normalize = wx.CheckBox(self.advanced_panel, label="Normalisasi Audio", name="Normalisasi Audio")
+        self.chk_normalize = wx.CheckBox(self.advanced_panel, label=i18n.t("chk_normalize"), name="Normalisasi Audio")
         self.chk_normalize.SetName("Normalisasi Audio")
-        self.chk_normalize.SetToolTip("Ratakan volume audio secara otomatis")
+        self.chk_normalize.SetToolTip(i18n.t("chk_normalize_tip"))
         self.chk_normalize.SetValue(self.config.get("normalize", False))
         adv_row2.Add(self.chk_normalize, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
 
-        self.chk_mono = wx.CheckBox(self.advanced_panel, label="Audio Mono", name="Konversi Audio Mono")
+        self.chk_mono = wx.CheckBox(self.advanced_panel, label=i18n.t("chk_mono"), name="Konversi Audio Mono")
         self.chk_mono.SetName("Konversi Audio Mono")
-        self.chk_mono.SetToolTip("Gabungkan kanal audio kiri dan kanan menjadi mono")
+        self.chk_mono.SetToolTip(i18n.t("chk_mono_tip"))
         self.chk_mono.SetValue(self.config.get("mono", False))
         adv_row2.Add(self.chk_mono, 0, wx.ALIGN_CENTER_VERTICAL, 5)
 
@@ -551,137 +562,421 @@ class StreamerFrame(wx.Frame):
         main_sizer.Add(self.advanced_panel, 0, wx.EXPAND | wx.ALL, 5)
 
         panel.SetSizer(main_sizer)
-        self.update_status_bar("Siap")
+        self.update_status_bar(i18n.t("status_ready"))
 
     def init_menu_bar(self):
         """Creates the comprehensive menu bar with accessible labels and shortcuts."""
-        menu_bar = wx.MenuBar()
+        self.menu_bar = wx.MenuBar()
 
         # --- File Menu ---
-        file_menu = wx.Menu()
-        item_open_folder = file_menu.Append(wx.ID_OPEN, "Buka &Folder...\tCtrl+O", "Pilih folder media untuk dimuat")
-        item_open_file = file_menu.Append(wx.ID_ANY, "Buka F&ile...\tCtrl+Shift+O", "Pilih file media tertentu")
-        item_refresh = file_menu.Append(wx.ID_REFRESH, "&Segarkan Daftar\tF5", "Perbarui isi folder saat ini")
-        file_menu.AppendSeparator()
-        item_settings = file_menu.Append(wx.ID_PREFERENCES, "&Pengaturan...\tCtrl+P", "Buka jendela pengaturan dan preferensi")
-        file_menu.AppendSeparator()
-        item_exit = file_menu.Append(wx.ID_EXIT, "&Keluar\tAlt+F4", "Tutup aplikasi")
-        menu_bar.Append(file_menu, "&File")
+        self.file_menu = wx.Menu()
+        self.item_open_folder = self.file_menu.Append(wx.ID_OPEN, i18n.t("menu_open_folder"), i18n.t("menu_open_folder_help"))
+        self.item_open_file = self.file_menu.Append(wx.ID_ANY, i18n.t("menu_open_file"), i18n.t("menu_open_file_help"))
+        self.item_refresh = self.file_menu.Append(wx.ID_REFRESH, i18n.t("menu_refresh"), i18n.t("menu_refresh_help"))
+        self.file_menu.AppendSeparator()
+        self.item_settings = self.file_menu.Append(wx.ID_PREFERENCES, i18n.t("menu_settings"), i18n.t("menu_settings_help"))
+        self.file_menu.AppendSeparator()
+        self.item_exit = self.file_menu.Append(wx.ID_EXIT, i18n.t("menu_exit"), i18n.t("menu_exit_help"))
+        self.menu_bar.Append(self.file_menu, i18n.t("menu_file"))
 
         # --- Playback Menu ---
-        play_menu = wx.Menu()
-        item_play_pause = play_menu.Append(wx.ID_ANY, "&Putar / Jeda\tSpace", "Mulai atau jeda pemutaran")
-        item_stop = play_menu.Append(wx.ID_ANY, "&Berhenti\tCtrl+S", "Hentikan pemutaran lagu saat ini")
-        item_prev = play_menu.Append(wx.ID_ANY, "Lagu Se&belumnya\tCtrl+Left", "Putar lagu sebelumnya dalam daftar")
-        item_next = play_menu.Append(wx.ID_ANY, "Lagu &Berikutnya\tCtrl+Right", "Putar lagu berikutnya dalam daftar")
-        play_menu.AppendSeparator()
-        item_rewind = play_menu.Append(wx.ID_ANY, "&Mundur 5 Detik", "Mundur pemutaran 5 detik")
-        item_forward = play_menu.Append(wx.ID_ANY, "Ma&ju 5 Detik", "Maju pemutaran 5 detik")
-        play_menu.AppendSeparator()
-        self.menu_toggle_loop = play_menu.AppendCheckItem(wx.ID_ANY, "&Ulangi Lagu (Loop)\tCtrl+L", "Aktifkan pengulangan lagu")
-        self.menu_toggle_shuffle = play_menu.AppendCheckItem(wx.ID_ANY, "Putar &Acak (Shuffle)", "Aktifkan pemutaran lagu acak")
-        self.menu_toggle_mute = play_menu.AppendCheckItem(wx.ID_ANY, "&Bisu (Mute)\tCtrl+M", "Matikan atau hidupkan suara")
-        menu_bar.Append(play_menu, "&Pemutaran")
+        self.play_menu = wx.Menu()
+        self.item_play_pause = self.play_menu.Append(wx.ID_ANY, i18n.t("menu_play_pause"), i18n.t("menu_play_pause_help"))
+        self.item_stop = self.play_menu.Append(wx.ID_ANY, i18n.t("menu_stop"), i18n.t("menu_stop_help"))
+        self.item_prev = self.play_menu.Append(wx.ID_ANY, i18n.t("menu_prev"), i18n.t("menu_prev_help"))
+        self.item_next = self.play_menu.Append(wx.ID_ANY, i18n.t("menu_next"), i18n.t("menu_next_help"))
+        self.play_menu.AppendSeparator()
+        self.item_rewind = self.play_menu.Append(wx.ID_ANY, i18n.t("menu_rewind"), i18n.t("menu_rewind_help"))
+        self.item_forward = self.play_menu.Append(wx.ID_ANY, i18n.t("menu_forward"), i18n.t("menu_forward_help"))
+        self.play_menu.AppendSeparator()
+        self.menu_toggle_loop = self.play_menu.AppendCheckItem(wx.ID_ANY, i18n.t("menu_loop"), i18n.t("menu_loop_help"))
+        self.menu_toggle_shuffle = self.play_menu.AppendCheckItem(wx.ID_ANY, i18n.t("menu_shuffle"), i18n.t("menu_shuffle_help"))
+        self.menu_toggle_mute = self.play_menu.AppendCheckItem(wx.ID_ANY, i18n.t("menu_mute"), i18n.t("menu_mute_help"))
+        self.menu_bar.Append(self.play_menu, i18n.t("menu_playback"))
 
         # --- Audio Menu ---
-        audio_menu = wx.Menu()
-        item_vol_up = audio_menu.Append(wx.ID_ANY, "&Naikkan Volume\tCtrl+Up", "Naikkan volume suara")
-        item_vol_down = audio_menu.Append(wx.ID_ANY, "&Turunkan Volume\tCtrl+Down", "Turunkan volume suara")
-        audio_menu.AppendSeparator()
+        self.audio_menu = wx.Menu()
+        self.item_vol_up = self.audio_menu.Append(wx.ID_ANY, i18n.t("menu_vol_up"), i18n.t("menu_vol_up_help"))
+        self.item_vol_down = self.audio_menu.Append(wx.ID_ANY, i18n.t("menu_vol_down"), i18n.t("menu_vol_down_help"))
+        self.audio_menu.AppendSeparator()
 
-        eq_menu = wx.Menu()
-        self.menu_eq_flat = eq_menu.AppendRadioItem(wx.ID_ANY, "Datar (Flat)", "Profil equalizer standar")
-        self.menu_eq_bass = eq_menu.AppendRadioItem(wx.ID_ANY, "Penguat Bass (Bass Boost)", "Tingkatkan nada rendah")
-        self.menu_eq_treble = eq_menu.AppendRadioItem(wx.ID_ANY, "Penguat Treble (Treble Boost)", "Tingkatkan nada tinggi")
-        self.menu_eq_vocal = eq_menu.AppendRadioItem(wx.ID_ANY, "Fokus Vokal (Vocal)", "Tingkatkan kejelasan vokal")
-        audio_menu.AppendSubMenu(eq_menu, "Preset &Equalizer")
+        self.eq_submenu = wx.Menu()
+        self.menu_eq_flat = self.eq_submenu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_eq_flat"), i18n.t("menu_eq_flat_help"))
+        self.menu_eq_bass = self.eq_submenu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_eq_bass"), i18n.t("menu_eq_bass_help"))
+        self.menu_eq_treble = self.eq_submenu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_eq_treble"), i18n.t("menu_eq_treble_help"))
+        self.menu_eq_vocal = self.eq_submenu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_eq_vocal"), i18n.t("menu_eq_vocal_help"))
+        self.eq_menu_item = self.audio_menu.AppendSubMenu(self.eq_submenu, i18n.t("menu_eq_submenu"))
 
-        self.menu_audio_norm = audio_menu.AppendCheckItem(wx.ID_ANY, "&Normalisasi Audio", "Ratakan kenyaringan audio otomatis")
-        self.menu_audio_mono = audio_menu.AppendCheckItem(wx.ID_ANY, "Konversi &Mono", "Gabungkan suara stereo ke mono")
-        menu_bar.Append(audio_menu, "&Audio")
+        self.menu_audio_norm = self.audio_menu.AppendCheckItem(wx.ID_ANY, i18n.t("menu_audio_norm"), i18n.t("menu_audio_norm_help"))
+        self.menu_audio_mono = self.audio_menu.AppendCheckItem(wx.ID_ANY, i18n.t("menu_audio_mono"), i18n.t("menu_audio_mono_help"))
+        self.audio_menu.AppendSeparator()
+        self.item_rescan_dev = self.audio_menu.Append(wx.ID_ANY, i18n.t("menu_rescan_devices"), i18n.t("menu_rescan_devices_help"))
+        self.menu_bar.Append(self.audio_menu, i18n.t("menu_audio"))
 
         # --- View Menu ---
-        view_menu = wx.Menu()
-        self.menu_mode_standard = view_menu.AppendRadioItem(wx.ID_ANY, "Mode &Standar", "Tampilan kontrol pemutar media bersih")
-        self.menu_mode_advanced = view_menu.AppendRadioItem(wx.ID_ANY, "Mode &Lanjutan", "Tampilkan fitur lanjutan streamer")
-        view_menu.AppendSeparator()
-        self.menu_view_all = view_menu.AppendRadioItem(wx.ID_ANY, "Tampilkan &Semua", "Tampilkan semua file dan folder")
-        self.menu_view_files = view_menu.AppendRadioItem(wx.ID_ANY, "Hanya &File", "Sembunyikan folder dari daftar")
-        self.menu_view_folders = view_menu.AppendRadioItem(wx.ID_ANY, "Hanya F&older", "Sembunyikan file dari daftar")
-        view_menu.AppendSeparator()
-        item_toggle_time = view_menu.Append(wx.ID_ANY, "Alihkan Tampilan &Waktu Sisa", "Beralih antara waktu berlalu dan sisa waktu")
-        menu_bar.Append(view_menu, "&Tampilan")
+        self.view_menu = wx.Menu()
+        self.menu_mode_standard = self.view_menu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_mode_standard"), i18n.t("menu_mode_standard_help"))
+        self.menu_mode_advanced = self.view_menu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_mode_advanced"), i18n.t("menu_mode_advanced_help"))
+        self.view_menu.AppendSeparator()
+        self.menu_view_all = self.view_menu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_view_all"), i18n.t("menu_view_all_help"))
+        self.menu_view_files = self.view_menu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_view_files"), i18n.t("menu_view_files_help"))
+        self.menu_view_folders = self.view_menu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_view_folders"), i18n.t("menu_view_folders_help"))
+        self.view_menu.AppendSeparator()
+        self.item_toggle_time = self.view_menu.Append(wx.ID_ANY, i18n.t("menu_toggle_time"), i18n.t("menu_toggle_time_help"))
+        self.menu_bar.Append(self.view_menu, i18n.t("menu_view"))
+
+        # --- Language Menu ---
+        self.lang_menu = wx.Menu()
+        self.menu_lang_id = self.lang_menu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_lang_id"), i18n.t("menu_lang_id_help"))
+        self.menu_lang_en = self.lang_menu.AppendRadioItem(wx.ID_ANY, i18n.t("menu_lang_en"), i18n.t("menu_lang_en_help"))
+        if i18n.get_language() == "en":
+            self.menu_lang_en.Check(True)
+        else:
+            self.menu_lang_id.Check(True)
+        self.menu_bar.Append(self.lang_menu, i18n.t("menu_language"))
 
         # --- Tools Menu ---
-        tools_menu = wx.Menu()
-        item_marker = tools_menu.Append(wx.ID_ANY, "&Tambah Penanda Streaming\tF9", "Catat stempel waktu streaming")
-        item_bookmarks = tools_menu.Append(wx.ID_ANY, "Pengelola &Bookmark...", "Kelola dan lompat ke penanda waktu")
-        item_inspector = tools_menu.Append(wx.ID_ANY, "&Inspektur Metadata Audio...", "Lihat rincian metadata teknis file audio")
-        item_sleep = tools_menu.Append(wx.ID_ANY, "Pengatur Waktu &Tidur (Sleep Timer)...", "Buka dialog pengatur waktu tidur")
-        tools_menu.AppendSeparator()
-        item_open_folder_exp = tools_menu.Append(wx.ID_ANY, "Buka Folder di File &Explorer", "Buka lokasi folder saat ini di Windows Explorer")
-        item_open_obs_txt = tools_menu.Append(wx.ID_ANY, "Buka now_playing.&txt", "Buka file output judul lagu OBS")
-        menu_bar.Append(tools_menu, "&Alat")
+        self.tools_menu = wx.Menu()
+        self.item_marker = self.tools_menu.Append(wx.ID_ANY, i18n.t("menu_marker"), i18n.t("menu_marker_help"))
+        self.item_bookmarks = self.tools_menu.Append(wx.ID_ANY, i18n.t("menu_bookmarks"), i18n.t("menu_bookmarks_help"))
+        self.item_inspector = self.tools_menu.Append(wx.ID_ANY, i18n.t("menu_inspector"), i18n.t("menu_inspector_help"))
+        self.item_sleep = self.tools_menu.Append(wx.ID_ANY, i18n.t("menu_sleep"), i18n.t("menu_sleep_help"))
+        self.tools_menu.AppendSeparator()
+        self.item_open_folder_exp = self.tools_menu.Append(wx.ID_ANY, i18n.t("menu_open_folder_exp"), i18n.t("menu_open_folder_exp_help"))
+        self.item_open_obs_txt = self.tools_menu.Append(wx.ID_ANY, i18n.t("menu_open_obs_txt"), i18n.t("menu_open_obs_txt_help"))
+        self.menu_bar.Append(self.tools_menu, i18n.t("menu_tools"))
 
         # --- Help Menu ---
-        help_menu = wx.Menu()
-        item_guide = help_menu.Append(wx.ID_HELP, "&Panduan Penggunaan\tF1", "Buka panduan lengkap aplikasi")
-        item_wizard = help_menu.Append(wx.ID_ANY, "&Wizard Mulai Cepat...", "Tampilkan panduan untuk pengguna baru")
-        help_menu.AppendSeparator()
-        item_about = help_menu.Append(wx.ID_ABOUT, "&Tentang Streamer App", "Informasi versi dan pembuat aplikasi")
-        menu_bar.Append(help_menu, "&Bantuan")
+        self.help_menu = wx.Menu()
+        self.item_guide = self.help_menu.Append(wx.ID_HELP, i18n.t("menu_guide"), i18n.t("menu_guide_help"))
+        self.item_wizard = self.help_menu.Append(wx.ID_ANY, i18n.t("menu_wizard"), i18n.t("menu_wizard_help"))
+        self.help_menu.AppendSeparator()
+        self.item_about = self.help_menu.Append(wx.ID_ABOUT, i18n.t("menu_about"), i18n.t("menu_about_help"))
+        self.menu_bar.Append(self.help_menu, i18n.t("menu_help"))
 
-        self.SetMenuBar(menu_bar)
+        self.SetMenuBar(self.menu_bar)
 
         # Menu Event Bindings
-        self.Bind(wx.EVT_MENU, self.on_open_folder, item_open_folder)
-        self.Bind(wx.EVT_MENU, self.on_open_file, item_open_file)
-        self.Bind(wx.EVT_MENU, self.on_refresh_folder, item_refresh)
-        self.Bind(wx.EVT_MENU, self.on_settings, item_settings)
-        self.Bind(wx.EVT_MENU, lambda e: self.Close(), item_exit)
+        self.Bind(wx.EVT_MENU, self.on_open_folder, self.item_open_folder)
+        self.Bind(wx.EVT_MENU, self.on_open_file, self.item_open_file)
+        self.Bind(wx.EVT_MENU, self.on_refresh_folder, self.item_refresh)
+        self.Bind(wx.EVT_MENU, self.on_settings, self.item_settings)
+        self.Bind(wx.EVT_MENU, lambda e: self.Close(), self.item_exit)
 
-        self.Bind(wx.EVT_MENU, self.on_play_pause, item_play_pause)
-        self.Bind(wx.EVT_MENU, self.on_stop, item_stop)
-        self.Bind(wx.EVT_MENU, lambda e: self.play_previous_file(), item_prev)
-        self.Bind(wx.EVT_MENU, lambda e: self.play_next_file(), item_next)
-        self.Bind(wx.EVT_MENU, lambda e: self.on_seek(-5), item_rewind)
-        self.Bind(wx.EVT_MENU, lambda e: self.on_seek(5), item_forward)
+        self.Bind(wx.EVT_MENU, self.on_play_pause, self.item_play_pause)
+        self.Bind(wx.EVT_MENU, self.on_stop, self.item_stop)
+        self.Bind(wx.EVT_MENU, lambda e: self.play_previous_file(), self.item_prev)
+        self.Bind(wx.EVT_MENU, lambda e: self.play_next_file(), self.item_next)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_seek(-5), self.item_rewind)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_seek(5), self.item_forward)
         self.Bind(wx.EVT_MENU, self.on_toggle_loop_menu, self.menu_toggle_loop)
         self.Bind(wx.EVT_MENU, self.on_toggle_shuffle_menu, self.menu_toggle_shuffle)
         self.Bind(wx.EVT_MENU, self.on_toggle_mute_menu, self.menu_toggle_mute)
 
-        self.Bind(wx.EVT_MENU, lambda e: self.change_volume(1), item_vol_up)
-        self.Bind(wx.EVT_MENU, lambda e: self.change_volume(-1), item_vol_down)
+        self.Bind(wx.EVT_MENU, lambda e: self.change_volume(1), self.item_vol_up)
+        self.Bind(wx.EVT_MENU, lambda e: self.change_volume(-1), self.item_vol_down)
         self.Bind(wx.EVT_MENU, lambda e: self.apply_equalizer("Flat"), self.menu_eq_flat)
         self.Bind(wx.EVT_MENU, lambda e: self.apply_equalizer("Bass Boost"), self.menu_eq_bass)
         self.Bind(wx.EVT_MENU, lambda e: self.apply_equalizer("Treble Boost"), self.menu_eq_treble)
         self.Bind(wx.EVT_MENU, lambda e: self.apply_equalizer("Vocal"), self.menu_eq_vocal)
         self.Bind(wx.EVT_MENU, self.on_toggle_normalize_menu, self.menu_audio_norm)
         self.Bind(wx.EVT_MENU, self.on_toggle_mono_menu, self.menu_audio_mono)
+        self.Bind(wx.EVT_MENU, lambda e: self.refresh_audio_devices(), self.item_rescan_dev)
 
         self.Bind(wx.EVT_MENU, lambda e: self.set_app_mode("standard"), self.menu_mode_standard)
         self.Bind(wx.EVT_MENU, lambda e: self.set_app_mode("advanced"), self.menu_mode_advanced)
         self.Bind(wx.EVT_MENU, lambda e: self.set_view_filter_selection("All"), self.menu_view_all)
         self.Bind(wx.EVT_MENU, lambda e: self.set_view_filter_selection("Files Only"), self.menu_view_files)
         self.Bind(wx.EVT_MENU, lambda e: self.set_view_filter_selection("Folders Only"), self.menu_view_folders)
-        self.Bind(wx.EVT_MENU, self.on_toggle_time_display, item_toggle_time)
+        self.Bind(wx.EVT_MENU, self.on_toggle_time_display, self.item_toggle_time)
 
-        self.Bind(wx.EVT_MENU, self.on_add_stream_marker, item_marker)
-        self.Bind(wx.EVT_MENU, lambda e: self.show_bookmarks_dialog(), item_bookmarks)
-        self.Bind(wx.EVT_MENU, lambda e: self.show_metadata_dialog(), item_inspector)
-        self.Bind(wx.EVT_MENU, lambda e: self.stream_features.show_sleep_timer_dialog(), item_sleep)
-        self.Bind(wx.EVT_MENU, lambda e: self.open_in_explorer(self.current_folder), item_open_folder_exp)
-        self.Bind(wx.EVT_MENU, self.open_now_playing_file, item_open_obs_txt)
+        self.Bind(wx.EVT_MENU, self.on_switch_language_id, self.menu_lang_id)
+        self.Bind(wx.EVT_MENU, self.on_switch_language_en, self.menu_lang_en)
 
-        self.Bind(wx.EVT_MENU, lambda e: readme.show_readme_dialog(self), item_guide)
-        self.Bind(wx.EVT_MENU, lambda e: readme.show_getting_started_wizard(self, self.config), item_wizard)
-        self.Bind(wx.EVT_MENU, self.on_about, item_about)
+        self.Bind(wx.EVT_MENU, self.on_add_stream_marker, self.item_marker)
+        self.Bind(wx.EVT_MENU, lambda e: self.show_bookmarks_dialog(), self.item_bookmarks)
+        self.Bind(wx.EVT_MENU, lambda e: self.show_metadata_dialog(), self.item_inspector)
+        self.Bind(wx.EVT_MENU, lambda e: self.stream_features.show_sleep_timer_dialog(), self.item_sleep)
+        self.Bind(wx.EVT_MENU, lambda e: self.open_in_explorer(self.current_folder), self.item_open_folder_exp)
+        self.Bind(wx.EVT_MENU, self.open_now_playing_file, self.item_open_obs_txt)
+
+        self.Bind(wx.EVT_MENU, lambda e: readme.show_readme_dialog(self), self.item_guide)
+        self.Bind(wx.EVT_MENU, lambda e: readme.show_getting_started_wizard(self, self.config), self.item_wizard)
+        self.Bind(wx.EVT_MENU, self.on_about, self.item_about)
 
     def init_drag_and_drop(self):
         """Sets up drag-and-drop support for files and folders."""
         self.SetDropTarget(MediaDropTarget(self))
         self.panel.SetDropTarget(MediaDropTarget(self))
         self.list_ctrl.SetDropTarget(MediaDropTarget(self))
+
+    def on_switch_language_id(self, event):
+        self.switch_language("id")
+
+    def on_switch_language_en(self, event):
+        self.switch_language("en")
+
+    def switch_language(self, lang):
+        if lang not in ("id", "en"):
+            return
+        if i18n.get_language() != lang:
+            i18n.set_language(lang, persist=True)
+            self.config["language"] = lang
+            utils.save_config(self.config)
+            self.retranslate_ui()
+            self.speak(i18n.t("lang_switched"))
+
+    def on_i18n_language_changed(self, new_lang):
+        """Callback when language is changed from settings or another component."""
+        wx.CallAfter(self.retranslate_ui)
+
+    def retranslate_ui(self):
+        """Updates all UI text, labels, tooltips, and menu items to current active language."""
+        lang = i18n.get_language()
+
+        # 1. Window Title
+        self.SetTitle(i18n.t("app_title"))
+
+        # 2. Menu Bar
+        if hasattr(self, 'menu_bar') and self.menu_bar:
+            self.menu_bar.SetMenuLabel(0, i18n.t("menu_file"))
+            self.menu_bar.SetMenuLabel(1, i18n.t("menu_playback"))
+            self.menu_bar.SetMenuLabel(2, i18n.t("menu_audio"))
+            self.menu_bar.SetMenuLabel(3, i18n.t("menu_view"))
+            self.menu_bar.SetMenuLabel(4, i18n.t("menu_language"))
+            self.menu_bar.SetMenuLabel(5, i18n.t("menu_tools"))
+            self.menu_bar.SetMenuLabel(6, i18n.t("menu_help"))
+
+            self.item_open_folder.SetItemLabel(i18n.t("menu_open_folder"))
+            self.item_open_folder.SetHelp(i18n.t("menu_open_folder_help"))
+            self.item_open_file.SetItemLabel(i18n.t("menu_open_file"))
+            self.item_open_file.SetHelp(i18n.t("menu_open_file_help"))
+            self.item_refresh.SetItemLabel(i18n.t("menu_refresh"))
+            self.item_refresh.SetHelp(i18n.t("menu_refresh_help"))
+            self.item_settings.SetItemLabel(i18n.t("menu_settings"))
+            self.item_settings.SetHelp(i18n.t("menu_settings_help"))
+            self.item_exit.SetItemLabel(i18n.t("menu_exit"))
+            self.item_exit.SetHelp(i18n.t("menu_exit_help"))
+
+            self.item_play_pause.SetItemLabel(i18n.t("menu_play_pause"))
+            self.item_play_pause.SetHelp(i18n.t("menu_play_pause_help"))
+            self.item_stop.SetItemLabel(i18n.t("menu_stop"))
+            self.item_stop.SetHelp(i18n.t("menu_stop_help"))
+            self.item_prev.SetItemLabel(i18n.t("menu_prev"))
+            self.item_prev.SetHelp(i18n.t("menu_prev_help"))
+            self.item_next.SetItemLabel(i18n.t("menu_next"))
+            self.item_next.SetHelp(i18n.t("menu_next_help"))
+            self.item_rewind.SetItemLabel(i18n.t("menu_rewind"))
+            self.item_rewind.SetHelp(i18n.t("menu_rewind_help"))
+            self.item_forward.SetItemLabel(i18n.t("menu_forward"))
+            self.item_forward.SetHelp(i18n.t("menu_forward_help"))
+            self.menu_toggle_loop.SetItemLabel(i18n.t("menu_loop"))
+            self.menu_toggle_loop.SetHelp(i18n.t("menu_loop_help"))
+            self.menu_toggle_shuffle.SetItemLabel(i18n.t("menu_shuffle"))
+            self.menu_toggle_shuffle.SetHelp(i18n.t("menu_shuffle_help"))
+            self.menu_toggle_mute.SetItemLabel(i18n.t("menu_mute"))
+            self.menu_toggle_mute.SetHelp(i18n.t("menu_mute_help"))
+
+            self.item_vol_up.SetItemLabel(i18n.t("menu_vol_up"))
+            self.item_vol_up.SetHelp(i18n.t("menu_vol_up_help"))
+            self.item_vol_down.SetItemLabel(i18n.t("menu_vol_down"))
+            self.item_vol_down.SetHelp(i18n.t("menu_vol_down_help"))
+            self.eq_menu_item.SetItemLabel(i18n.t("menu_eq_submenu"))
+            self.menu_eq_flat.SetItemLabel(i18n.t("menu_eq_flat"))
+            self.menu_eq_flat.SetHelp(i18n.t("menu_eq_flat_help"))
+            self.menu_eq_bass.SetItemLabel(i18n.t("menu_eq_bass"))
+            self.menu_eq_bass.SetHelp(i18n.t("menu_eq_bass_help"))
+            self.menu_eq_treble.SetItemLabel(i18n.t("menu_eq_treble"))
+            self.menu_eq_treble.SetHelp(i18n.t("menu_eq_treble_help"))
+            self.menu_eq_vocal.SetItemLabel(i18n.t("menu_eq_vocal"))
+            self.menu_eq_vocal.SetHelp(i18n.t("menu_eq_vocal_help"))
+            self.menu_audio_norm.SetItemLabel(i18n.t("menu_audio_norm"))
+            self.menu_audio_norm.SetHelp(i18n.t("menu_audio_norm_help"))
+            self.menu_audio_mono.SetItemLabel(i18n.t("menu_audio_mono"))
+            self.menu_audio_mono.SetHelp(i18n.t("menu_audio_mono_help"))
+            self.item_rescan_dev.SetItemLabel(i18n.t("menu_rescan_devices"))
+            self.item_rescan_dev.SetHelp(i18n.t("menu_rescan_devices_help"))
+
+            self.menu_mode_standard.SetItemLabel(i18n.t("menu_mode_standard"))
+            self.menu_mode_standard.SetHelp(i18n.t("menu_mode_standard_help"))
+            self.menu_mode_advanced.SetItemLabel(i18n.t("menu_mode_advanced"))
+            self.menu_mode_advanced.SetHelp(i18n.t("menu_mode_advanced_help"))
+            self.menu_view_all.SetItemLabel(i18n.t("menu_view_all"))
+            self.menu_view_all.SetHelp(i18n.t("menu_view_all_help"))
+            self.menu_view_files.SetItemLabel(i18n.t("menu_view_files"))
+            self.menu_view_files.SetHelp(i18n.t("menu_view_files_help"))
+            self.menu_view_folders.SetItemLabel(i18n.t("menu_view_folders"))
+            self.menu_view_folders.SetHelp(i18n.t("menu_view_folders_help"))
+            self.item_toggle_time.SetItemLabel(i18n.t("menu_toggle_time"))
+            self.item_toggle_time.SetHelp(i18n.t("menu_toggle_time_help"))
+
+            self.menu_lang_id.Check(lang == "id")
+            self.menu_lang_en.Check(lang == "en")
+
+            self.item_marker.SetItemLabel(i18n.t("menu_marker"))
+            self.item_marker.SetHelp(i18n.t("menu_marker_help"))
+            self.item_bookmarks.SetItemLabel(i18n.t("menu_bookmarks"))
+            self.item_bookmarks.SetHelp(i18n.t("menu_bookmarks_help"))
+            self.item_inspector.SetItemLabel(i18n.t("menu_inspector"))
+            self.item_inspector.SetHelp(i18n.t("menu_inspector_help"))
+            self.item_sleep.SetItemLabel(i18n.t("menu_sleep"))
+            self.item_sleep.SetHelp(i18n.t("menu_sleep_help"))
+            self.item_open_folder_exp.SetItemLabel(i18n.t("menu_open_folder_exp"))
+            self.item_open_folder_exp.SetHelp(i18n.t("menu_open_folder_exp_help"))
+            self.item_open_obs_txt.SetItemLabel(i18n.t("menu_open_obs_txt"))
+            self.item_open_obs_txt.SetHelp(i18n.t("menu_open_obs_txt_help"))
+
+            self.item_guide.SetItemLabel(i18n.t("menu_guide"))
+            self.item_guide.SetHelp(i18n.t("menu_guide_help"))
+            self.item_wizard.SetItemLabel(i18n.t("menu_wizard"))
+            self.item_wizard.SetHelp(i18n.t("menu_wizard_help"))
+            self.item_about.SetItemLabel(i18n.t("menu_about"))
+            self.item_about.SetHelp(i18n.t("menu_about_help"))
+
+        # 3. Top Controls
+        if hasattr(self, 'open_btn'):
+            self.open_btn.SetLabel(i18n.t("btn_open_folder"))
+            self.open_btn.SetName(i18n.t("btn_open_folder"))
+            self.open_btn.SetToolTip(i18n.t("btn_open_folder_tip"))
+        if hasattr(self, 'open_file_btn'):
+            self.open_file_btn.SetLabel(i18n.t("btn_open_file"))
+            self.open_file_btn.SetName(i18n.t("btn_open_file"))
+            self.open_file_btn.SetToolTip(i18n.t("btn_open_file_tip"))
+        if hasattr(self, 'settings_btn'):
+            self.settings_btn.SetLabel(i18n.t("btn_settings"))
+            self.settings_btn.SetName(i18n.t("btn_settings"))
+            self.settings_btn.SetToolTip(i18n.t("btn_settings_tip"))
+        if hasattr(self, 'recent_combo'):
+            self.recent_combo.SetName(i18n.t("recent_folders_name"))
+            self.recent_combo.SetToolTip(i18n.t("recent_folders_tip"))
+
+        # 4. Search and Filter
+        if hasattr(self, 'search_label'):
+            self.search_label.SetLabel(i18n.t("label_search"))
+            self.search_label.SetName(i18n.t("label_search"))
+            self.search_label.SetToolTip(i18n.t("label_search_tip"))
+        if hasattr(self, 'search_ctrl'):
+            self.search_ctrl.SetName(i18n.t("search_name"))
+            self.search_ctrl.SetToolTip(i18n.t("search_tip"))
+        if hasattr(self, 'filter_label'):
+            self.filter_label.SetLabel(i18n.t("label_view_filter"))
+            self.filter_label.SetName(i18n.t("label_view_filter"))
+            self.filter_label.SetToolTip(i18n.t("label_view_filter_tip"))
+        if hasattr(self, 'view_filter'):
+            self.view_filter.SetName(i18n.t("view_filter_name"))
+            self.view_filter.SetToolTip(i18n.t("view_filter_tip"))
+            curr_filter_sel = self.view_filter.GetSelection()
+            self.view_filter.Clear()
+            self.view_filter.AppendItems([i18n.t("filter_all"), i18n.t("filter_files"), i18n.t("filter_folders")])
+            self.view_filter.SetSelection(curr_filter_sel if curr_filter_sel != wx.NOT_FOUND else 0)
+
+        # 5. List View Column
+        if hasattr(self, 'list_ctrl'):
+            self.list_ctrl.SetName(i18n.t("list_name"))
+            self.list_ctrl.SetToolTip(i18n.t("list_tip"))
+            col = self.list_ctrl.GetColumn(0)
+            if col:
+                col.SetText(i18n.t("col_name"))
+                self.list_ctrl.SetColumn(0, col)
+
+        # 6. Playback Buttons
+        if hasattr(self, 'time_btn'):
+            self.time_btn.SetName(i18n.t("time_btn_name"))
+            self.time_btn.SetToolTip(i18n.t("time_btn_tip"))
+        if hasattr(self, 'seek_slider'):
+            self.seek_slider.SetName(i18n.t("seek_slider_name"))
+            self.seek_slider.SetToolTip(i18n.t("seek_slider_tip"))
+        if hasattr(self, 'prev_btn'):
+            self.prev_btn.SetLabel(i18n.t("btn_prev"))
+            self.prev_btn.SetName(i18n.t("btn_prev_name"))
+            self.prev_btn.SetToolTip(i18n.t("btn_prev_tip"))
+        if hasattr(self, 'rewind_btn'):
+            self.rewind_btn.SetLabel(i18n.t("btn_rewind"))
+            self.rewind_btn.SetName(i18n.t("btn_rewind_name"))
+            self.rewind_btn.SetToolTip(i18n.t("btn_rewind_tip"))
+        self.update_play_button_label()
+        if hasattr(self, 'stop_btn'):
+            self.stop_btn.SetLabel(i18n.t("btn_stop"))
+            self.stop_btn.SetName(i18n.t("btn_stop_name"))
+            self.stop_btn.SetToolTip(i18n.t("btn_stop_tip"))
+        if hasattr(self, 'forward_btn'):
+            self.forward_btn.SetLabel(i18n.t("btn_forward"))
+            self.forward_btn.SetName(i18n.t("btn_forward_name"))
+            self.forward_btn.SetToolTip(i18n.t("btn_forward_tip"))
+        if hasattr(self, 'next_btn'):
+            self.next_btn.SetLabel(i18n.t("btn_next"))
+            self.next_btn.SetName(i18n.t("btn_next_name"))
+            self.next_btn.SetToolTip(i18n.t("btn_next_tip"))
+        if hasattr(self, 'mute_toggle'):
+            self.mute_toggle.SetLabel(i18n.t("btn_mute_active") if self.is_muted else i18n.t("btn_mute"))
+            self.mute_toggle.SetName(i18n.t("btn_mute_name"))
+            self.mute_toggle.SetToolTip(i18n.t("btn_mute_tip"))
+        if hasattr(self, 'loop_toggle'):
+            loop_active = self.loop_toggle.GetValue()
+            self.loop_toggle.SetLabel(i18n.t("btn_loop_on") if loop_active else i18n.t("btn_loop_off"))
+            self.loop_toggle.SetName(i18n.t("btn_loop_name"))
+            self.loop_toggle.SetToolTip(i18n.t("btn_loop_tip"))
+        if hasattr(self, 'shuffle_toggle'):
+            self.shuffle_toggle.SetLabel(i18n.t("btn_shuffle_on") if self.shuffle_enabled else i18n.t("btn_shuffle_off"))
+            self.shuffle_toggle.SetName(i18n.t("btn_shuffle_name"))
+            self.shuffle_toggle.SetToolTip(i18n.t("btn_shuffle_tip"))
+
+        # 7. Volume and Device
+        if hasattr(self, 'vol_label'):
+            self.vol_label.SetLabel(i18n.t("label_volume"))
+            self.vol_label.SetName(i18n.t("label_volume"))
+            self.vol_label.SetToolTip(i18n.t("label_volume_tip"))
+        if hasattr(self, 'vol_slider'):
+            self.vol_slider.SetName(i18n.t("slider_volume_name"))
+            self.vol_slider.SetToolTip(i18n.t("slider_volume_tip"))
+        if hasattr(self, 'dev_label'):
+            self.dev_label.SetLabel(i18n.t("label_device"))
+            self.dev_label.SetName(i18n.t("label_device"))
+            self.dev_label.SetToolTip(i18n.t("label_device_tip"))
+        if hasattr(self, 'device_choice'):
+            self.device_choice.SetName(i18n.t("choice_device_name"))
+            self.device_choice.SetToolTip(i18n.t("choice_device_tip"))
+
+        # 8. Advanced Panel
+        if hasattr(self, 'adv_box'):
+            self.adv_box.SetLabel(i18n.t("adv_box_label"))
+        if hasattr(self, 'marker_btn'):
+            self.marker_btn.SetLabel(i18n.t("btn_marker"))
+            self.marker_btn.SetName(i18n.t("btn_marker_name"))
+            self.marker_btn.SetToolTip(i18n.t("btn_marker_tip"))
+        if hasattr(self, 'bookmark_btn'):
+            self.bookmark_btn.SetLabel(i18n.t("btn_bookmarks"))
+            self.bookmark_btn.SetName(i18n.t("btn_bookmarks_name"))
+            self.bookmark_btn.SetToolTip(i18n.t("btn_bookmarks_tip"))
+        if hasattr(self, 'inspector_btn'):
+            self.inspector_btn.SetLabel(i18n.t("btn_inspector"))
+            self.inspector_btn.SetName(i18n.t("btn_inspector_name"))
+            self.inspector_btn.SetToolTip(i18n.t("btn_inspector_tip"))
+        if hasattr(self, 'obs_chk'):
+            self.obs_chk.SetLabel(i18n.t("chk_obs"))
+            self.obs_chk.SetName(i18n.t("chk_obs_name"))
+            self.obs_chk.SetToolTip(i18n.t("chk_obs_tip"))
+        if hasattr(self, 'eq_label'):
+            self.eq_label.SetLabel(i18n.t("label_eq"))
+            self.eq_label.SetName(i18n.t("label_eq"))
+            self.eq_label.SetToolTip(i18n.t("label_eq_tip"))
+        if hasattr(self, 'eq_choice'):
+            self.eq_choice.SetName(i18n.t("choice_eq_name"))
+            self.eq_choice.SetToolTip(i18n.t("choice_eq_tip"))
+        if hasattr(self, 'chk_normalize'):
+            self.chk_normalize.SetLabel(i18n.t("chk_normalize"))
+            self.chk_normalize.SetName(i18n.t("chk_normalize_name"))
+            self.chk_normalize.SetToolTip(i18n.t("chk_normalize_tip"))
+        if hasattr(self, 'chk_mono'):
+            self.chk_mono.SetLabel(i18n.t("chk_mono"))
+            self.chk_mono.SetName(i18n.t("chk_mono_name"))
+            self.chk_mono.SetToolTip(i18n.t("chk_mono_tip"))
+
+        # 9. Status Bar & Layout
+        self.update_status_bar()
+        if hasattr(self, 'panel'):
+            self.panel.Layout()
+        self.Layout()
 
     def init_shortcuts(self):
         # Global shortcuts for the frame
@@ -783,14 +1078,14 @@ class StreamerFrame(wx.Frame):
 
         if self.is_muted:
             self.mute_toggle.SetValue(True)
-            self.mute_toggle.SetLabel("Bisu")
+            self.mute_toggle.SetLabel(i18n.t("btn_mute_active"))
             if hasattr(self, 'menu_toggle_mute'):
                 self.menu_toggle_mute.Check(True)
             if self.player:
                 self.player.set_volume(0, persist=False)
         else:
             self.mute_toggle.SetValue(False)
-            self.mute_toggle.SetLabel("Mute")
+            self.mute_toggle.SetLabel(i18n.t("btn_mute"))
             if hasattr(self, 'menu_toggle_mute'):
                 self.menu_toggle_mute.Check(False)
             if self.player:
@@ -798,14 +1093,14 @@ class StreamerFrame(wx.Frame):
 
         saved_loop = self.config.get("loop", False)
         self.loop_toggle.SetValue(saved_loop)
-        self.loop_toggle.SetLabel("Loop Hidup" if saved_loop else "Loop Mati")
+        self.loop_toggle.SetLabel(i18n.t("btn_loop_on") if saved_loop else i18n.t("btn_loop_off"))
         if hasattr(self, 'menu_toggle_loop'):
             self.menu_toggle_loop.Check(saved_loop)
         if self.player:
             self.player.set_loop(saved_loop)
 
         self.shuffle_toggle.SetValue(self.shuffle_enabled)
-        self.shuffle_toggle.SetLabel("Acak: Hidup" if self.shuffle_enabled else "Acak: Mati")
+        self.shuffle_toggle.SetLabel(i18n.t("btn_shuffle_on") if self.shuffle_enabled else i18n.t("btn_shuffle_off"))
         if hasattr(self, 'menu_toggle_shuffle'):
             self.menu_toggle_shuffle.Check(self.shuffle_enabled)
 
@@ -837,9 +1132,9 @@ class StreamerFrame(wx.Frame):
             self.menu_mode_advanced.Check(mode == "advanced")
 
         self.update_status_bar()
-        mode_text = "Lanjutan" if is_adv else "Standar"
+        mode_text = i18n.t("status_mode_advanced") if is_adv else i18n.t("status_mode_standard")
         if speak:
-            self.speak(f"Mode aplikasi diubah ke {mode_text}")
+            self.speak(i18n.t("spk_mode_switched", mode=mode_text))
 
     def update_status_bar(self, state=None):
         """Updates all 4 fields of the status bar cleanly."""
@@ -848,23 +1143,23 @@ class StreamerFrame(wx.Frame):
 
         if state is None:
             if self.player and self.player.is_playing():
-                track = self.current_playing_file or "Lagu"
-                state = f"Memutar: {track}"
+                track = self.current_playing_file or i18n.t("status_ready")
+                state = i18n.t("status_playing", name=track)
             elif self.player and not getattr(self.player.mp, 'idle_active', getattr(self.player.mp, 'core_idle', True)):
-                state = "Jeda"
+                state = i18n.t("status_paused", name=self.current_playing_file or "")
             else:
-                state = "Berhenti"
+                state = i18n.t("status_stopped")
 
         count = len(self.filtered_file_list_data)
         vol = self.vol_slider.GetValue()
-        vol_str = f"Vol: {vol}%"
+        vol_str = i18n.t("status_vol", vol=vol)
         if self.is_muted:
-            vol_str += " [Bisu]"
+            vol_str += f" [{i18n.t('status_muted')}]"
 
-        mode_str = f"Mode: {'Lanjutan' if self.app_mode == 'advanced' else 'Standar'}"
+        mode_str = i18n.t("status_mode_advanced") if self.app_mode == 'advanced' else i18n.t("status_mode_standard")
 
         self.status_bar.SetStatusText(state, 0)
-        self.status_bar.SetStatusText(f"Total: {count} item", 1)
+        self.status_bar.SetStatusText(f"Total: {i18n.t('status_files_count', count=count)}", 1)
         self.status_bar.SetStatusText(vol_str, 2)
         self.status_bar.SetStatusText(mode_str, 3)
 
@@ -903,7 +1198,7 @@ class StreamerFrame(wx.Frame):
             self.list_ctrl.Focus(0)
 
         self.update_status_bar()
-        self.speak(f"Folder dimuat. {len(self.filtered_file_list_data)} item.")
+        self.speak(i18n.t("spk_folder_loaded", count=len(self.filtered_file_list_data)))
 
     def select_file_by_name(self, filename):
         for i, item in enumerate(self.filtered_file_list_data):
@@ -914,15 +1209,15 @@ class StreamerFrame(wx.Frame):
                 break
 
     def on_open_folder(self, event):
-        dlg = wx.DirDialog(self, "Pilih sebuah folder media", defaultPath=self.current_folder)
+        dlg = wx.DirDialog(self, i18n.t("menu_open_folder_help"), defaultPath=self.current_folder)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.load_folder(path)
         dlg.Destroy()
 
     def on_open_file(self, event):
-        wildcard = "File Media (*.mp3;*.wav;*.ogg;*.flac;*.m4a;*.mp4;*.mkv)|*.mp3;*.wav;*.ogg;*.flac;*.m4a;*.aac;*.wma;*.opus;*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.webm|Semua File (*.*)|*.*"
-        dlg = wx.FileDialog(self, "Pilih file media untuk diputar", defaultDir=self.current_folder, wildcard=wildcard, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        wildcard = "Media Files (*.mp3;*.wav;*.ogg;*.flac;*.m4a;*.mp4;*.mkv)|*.mp3;*.wav;*.ogg;*.flac;*.m4a;*.aac;*.wma;*.opus;*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.webm|All Files (*.*)|*.*"
+        dlg = wx.FileDialog(self, i18n.t("menu_open_file_help"), defaultDir=self.current_folder, wildcard=wildcard, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             parent = os.path.dirname(path)
@@ -939,7 +1234,7 @@ class StreamerFrame(wx.Frame):
     def on_refresh_folder(self, event):
         if self.current_folder:
             self.load_folder(self.current_folder)
-            self.speak("Daftar folder disegarkan.")
+            self.speak(i18n.t("spk_folder_refreshed"))
 
     def on_settings(self, event):
         with settings.SettingsDialog(self, self.config) as dlg:
@@ -949,7 +1244,7 @@ class StreamerFrame(wx.Frame):
                 new_mode = self.config.get("app_mode", self.app_mode)
                 if new_mode != self.app_mode:
                     self.set_app_mode(new_mode)
-                self.speak("Pengaturan berhasil disimpan.")
+                self.speak(i18n.t("spk_settings_saved"))
 
     def on_search_text(self, event):
         self.current_search_query = self.search_ctrl.GetValue().lower()
@@ -1004,7 +1299,7 @@ class StreamerFrame(wx.Frame):
             self.list_ctrl.Select(0)
             self.list_ctrl.Focus(0)
         self.update_status_bar()
-        self.speak(f"Ketemu {count} file")
+        self.speak(i18n.t("spk_file_found", count=count))
 
     def on_item_activated(self, event):
         """Called when pressing Enter or Double Click on a list item."""
@@ -1013,7 +1308,7 @@ class StreamerFrame(wx.Frame):
     def play_selected_item(self):
         selected = self.list_ctrl.GetFirstSelected()
         if selected == -1:
-            self.speak("Tidak ada yang dipilih")
+            self.speak(i18n.t("spk_no_selection"))
             return
 
         filename, is_folder = self.filtered_file_list_data[selected]
@@ -1036,10 +1331,10 @@ class StreamerFrame(wx.Frame):
             self.current_playing_file = filename
 
             def on_started():
-                self.speak(f"Memutar {filename}")
+                self.speak(i18n.t("spk_playing", name=filename))
                 self.update_play_button_label()
                 self.SetTitle(f"Streamer App - {filename}")
-                self.update_status_bar(state=f"Memutar: {filename}")
+                self.update_status_bar(state=i18n.t("status_playing", name=filename))
                 if self.config.get("obs_export", False):
                     self.stream_features.export_now_playing(filename)
 
@@ -1057,17 +1352,17 @@ class StreamerFrame(wx.Frame):
             if self.config.get("autoplay", False):
                 wx.CallAfter(self.play_next_file)
             else:
-                wx.CallAfter(self.update_status_bar, "Selesai")
+                wx.CallAfter(self.update_status_bar, i18n.t("status_stopped"))
 
     def play_previous_file(self):
         """Plays the previous audio track in the list."""
         if not self.filtered_file_list_data:
-            self.speak("Daftar file kosong")
+            self.speak(i18n.t("spk_empty_list"))
             return
 
         file_indices = [i for i, item in enumerate(self.filtered_file_list_data) if not item[1]]
         if not file_indices:
-            self.speak("Tidak ada file audio dalam daftar")
+            self.speak(i18n.t("spk_no_audio_files"))
             return
 
         selected = self.list_ctrl.GetFirstSelected()
@@ -1081,7 +1376,7 @@ class StreamerFrame(wx.Frame):
                 else:
                     if hasattr(accessibility, 'play_boundary_top'):
                         accessibility.play_boundary_top()
-                    self.speak("Awal daftar lagu tercapai")
+                    self.speak(i18n.t("spk_first_track_reached"))
                     return
         else:
             target_idx = file_indices[0]
@@ -1095,12 +1390,12 @@ class StreamerFrame(wx.Frame):
     def play_next_file(self):
         """Plays the next audio track in the list or a random one if shuffle is on."""
         if not self.filtered_file_list_data:
-            self.speak("Daftar file kosong")
+            self.speak(i18n.t("spk_empty_list"))
             return
 
         file_indices = [i for i, item in enumerate(self.filtered_file_list_data) if not item[1]]
         if not file_indices:
-            self.speak("Tidak ada file audio dalam daftar")
+            self.speak(i18n.t("spk_no_audio_files"))
             return
 
         selected = self.list_ctrl.GetFirstSelected()
@@ -1119,7 +1414,7 @@ class StreamerFrame(wx.Frame):
                     else:
                         if hasattr(accessibility, 'play_boundary_bottom'):
                             accessibility.play_boundary_bottom()
-                        self.speak("Akhir daftar lagu tercapai")
+                        self.speak(i18n.t("spk_last_track_reached"))
                         return
             else:
                 target_idx = file_indices[0]
@@ -1143,9 +1438,9 @@ class StreamerFrame(wx.Frame):
         self.seek_slider.SetValue(0)
         self.time_btn.SetLabel("00:00 / 00:00")
         self.update_play_button_label()
-        self.SetTitle("Streamer App")
-        self.update_status_bar(state="Berhenti")
-        self.speak("Pemutaran dihentikan")
+        self.SetTitle(i18n.t("app_title"))
+        self.update_status_bar(state=i18n.t("status_stopped"))
+        self.speak(i18n.t("spk_stopped"))
 
     def on_play_pause(self, event):
         if not self.player:
@@ -1165,9 +1460,9 @@ class StreamerFrame(wx.Frame):
                 current_vol = self.vol_slider.GetValue()
 
                 def on_paused():
-                    self.speak("Jeda")
+                    self.speak(i18n.t("spk_paused"))
                     self.update_play_button_label()
-                    self.update_status_bar(state="Jeda")
+                    self.update_status_bar(state=i18n.t("status_paused", name=self.current_playing_file or ""))
 
                 self.fader.fade_out_and_pause(fade_duration, current_vol, on_complete=on_paused)
                 return
@@ -1185,10 +1480,10 @@ class StreamerFrame(wx.Frame):
                 self.player.pause()
 
                 def on_resumed():
-                    self.speak("Memutar")
+                    self.speak(i18n.t("spk_playing", name=self.current_playing_file or ""))
                     self.update_play_button_label()
-                    track = self.current_playing_file or "Lagu"
-                    self.update_status_bar(state=f"Memutar: {track}")
+                    track = self.current_playing_file or i18n.t("status_ready")
+                    self.update_status_bar(state=i18n.t("status_playing", name=track))
 
                 self.fader.fade_in_and_resume(fade_duration, current_vol, on_complete=on_resumed)
                 return
@@ -1198,18 +1493,21 @@ class StreamerFrame(wx.Frame):
             self.fader.cancel()
 
         is_paused = self.player.pause()
-        state_text = "Jeda" if is_paused else "Memutar"
-        self.speak(state_text)
+        if is_paused:
+            self.speak(i18n.t("spk_paused"))
+            self.update_status_bar(state=i18n.t("status_paused", name=self.current_playing_file or ""))
+        else:
+            self.speak(i18n.t("spk_playing", name=self.current_playing_file or ""))
+            self.update_status_bar(state=i18n.t("status_playing", name=self.current_playing_file or ""))
         self.update_play_button_label()
-        self.update_status_bar(state=state_text)
 
     def update_play_button_label(self):
         if not hasattr(self, 'play_btn'):
             return
         if self.player and self.player.is_playing():
-            self.play_btn.SetLabel("Jeda")
+            self.play_btn.SetLabel(i18n.t("btn_pause"))
         else:
-            self.play_btn.SetLabel("Putar")
+            self.play_btn.SetLabel(i18n.t("btn_play"))
 
     def on_toggle_loop_shortcut(self, event):
         state = self.loop_toggle.GetValue()
@@ -1228,11 +1526,11 @@ class StreamerFrame(wx.Frame):
         self.player.set_loop(state)
         self.config["loop"] = state
         utils.save_setting("loop", state)
-        msg = "Loop Hidup" if state else "Loop Mati"
+        msg = i18n.t("btn_loop_on") if state else i18n.t("btn_loop_off")
         self.loop_toggle.SetLabel(msg)
         if hasattr(self, 'menu_toggle_loop'):
             self.menu_toggle_loop.Check(state)
-        spoken_msg = "Pengulangan diaktifkan" if state else "Pengulangan dinonaktifkan"
+        spoken_msg = i18n.t("spk_loop_on") if state else i18n.t("spk_loop_off")
         self.speak(spoken_msg)
 
     def on_toggle_shuffle_menu(self, event):
@@ -1244,11 +1542,11 @@ class StreamerFrame(wx.Frame):
         self.shuffle_enabled = self.shuffle_toggle.GetValue()
         self.config["shuffle"] = self.shuffle_enabled
         utils.save_setting("shuffle", self.shuffle_enabled)
-        label = "Acak: Hidup" if self.shuffle_enabled else "Acak: Mati"
+        label = i18n.t("btn_shuffle_on") if self.shuffle_enabled else i18n.t("btn_shuffle_off")
         self.shuffle_toggle.SetLabel(label)
         if hasattr(self, 'menu_toggle_shuffle'):
             self.menu_toggle_shuffle.Check(self.shuffle_enabled)
-        msg = "Putar acak diaktifkan" if self.shuffle_enabled else "Putar acak dinonaktifkan"
+        msg = i18n.t("spk_shuffle_on") if self.shuffle_enabled else i18n.t("spk_shuffle_off")
         self.speak(msg)
 
     def on_toggle_mute_menu(self, event):
@@ -1265,17 +1563,16 @@ class StreamerFrame(wx.Frame):
 
         if self.is_muted:
             self.mute_toggle.SetValue(True)
-            self.mute_toggle.SetLabel("Bisu")
+            self.mute_toggle.SetLabel(i18n.t("btn_mute_active"))
             if hasattr(self, 'menu_toggle_mute'):
                 self.menu_toggle_mute.Check(True)
-            self.speak("Audio dibisukan")
+            self.speak(i18n.t("spk_audio_muted"))
         else:
             self.mute_toggle.SetValue(False)
-            self.mute_toggle.SetLabel("Mute")
+            self.mute_toggle.SetLabel(i18n.t("btn_mute"))
             if hasattr(self, 'menu_toggle_mute'):
                 self.menu_toggle_mute.Check(False)
-            cur_vol = self.player.get_volume() if self.player else self.vol_slider.GetValue()
-            self.speak(f"Audio aktif, volume {int(cur_vol)}%")
+            self.speak(i18n.t("spk_audio_unmuted"))
 
         self.update_status_bar()
 
@@ -1285,7 +1582,7 @@ class StreamerFrame(wx.Frame):
         curr = self.player.get_time_pos() if self.player else 0
         dur = self.player.get_duration() if self.player else 0
         self.update_time_display(curr, dur)
-        mode_text = "Menampilkan sisa waktu" if self.show_remaining_time else "Menampilkan waktu berlalu"
+        mode_text = i18n.t("spk_time_remaining") if self.show_remaining_time else i18n.t("spk_time_elapsed")
         self.speak(mode_text)
 
     def on_seek_thumbtrack(self, event):
@@ -1330,7 +1627,7 @@ class StreamerFrame(wx.Frame):
                     curr = self.player.get_time_pos() or 0
                     self.player.seek(target_pos - curr)
             self.update_time_display(target_pos, dur)
-            self.speak(f"Posisi {utils.format_time(target_pos)}")
+            self.speak(i18n.t("spk_jump_to", time=utils.format_time(target_pos)))
 
     def on_seek(self, seconds):
         if self.player:
@@ -1349,7 +1646,7 @@ class StreamerFrame(wx.Frame):
         new_val = max(0, min(max_vol, current + (change * step)))
         self.vol_slider.SetValue(new_val)
         self.on_volume_change(None)
-        self.speak(f"Volume {new_val}%")
+        self.speak(i18n.t("spk_vol_level", val=new_val))
 
     def on_volume_change(self, event):
         val = self.vol_slider.GetValue()
@@ -1358,7 +1655,7 @@ class StreamerFrame(wx.Frame):
             self.config["muted"] = False
             utils.save_muted(False)
             self.mute_toggle.SetValue(False)
-            self.mute_toggle.SetLabel("Mute")
+            self.mute_toggle.SetLabel(i18n.t("btn_mute"))
             if hasattr(self, 'menu_toggle_mute'):
                 self.menu_toggle_mute.Check(False)
 
@@ -1389,6 +1686,7 @@ class StreamerFrame(wx.Frame):
             self.device_choice.SetSelection(selected_idx)
             active_dev = self.device_choice.GetClientData(selected_idx)
             self.player.set_audio_device(active_dev, persist=False)
+            self.speak(i18n.t("spk_dev_refreshed", count=len(devices)))
 
     def on_device_change(self, event):
         if not self.player:
@@ -1399,7 +1697,7 @@ class StreamerFrame(wx.Frame):
             dev_desc = self.device_choice.GetString(idx)
             self.player.set_audio_device(dev_name, persist=True)
             self.config["last_audio_device"] = dev_name
-            self.speak(f"Perangkat audio diatur ke {dev_desc}")
+            self.speak(i18n.t("spk_dev_set", name=dev_desc))
 
     def on_timer(self, event):
         if not self.player:
@@ -1470,7 +1768,7 @@ class StreamerFrame(wx.Frame):
                 else:
                     if hasattr(accessibility, 'play_boundary_top'):
                         accessibility.play_boundary_top()
-                    self.speak("Batas direktori teratas")
+                    self.speak(i18n.t("spk_dir_boundary"))
         elif keycode == wx.WXK_LEFT:
             step = self.config.get("seek_step", 5)
             self.on_seek(-step)
@@ -1490,13 +1788,13 @@ class StreamerFrame(wx.Frame):
         full_path = os.path.join(self.current_folder, filename)
 
         menu = wx.Menu()
-        item_play = menu.Append(wx.ID_ANY, "Buka / Putar\tEnter", "Buka folder atau putar file ini")
-        item_pin = menu.Append(wx.ID_ANY, "Tambah ke Favorit\tCtrl+D", "Sematkan file ke daftar favorit")
+        item_play = menu.Append(wx.ID_ANY, i18n.t("ctx_play"), i18n.t("menu_play_pause_help"))
+        item_pin = menu.Append(wx.ID_ANY, i18n.t("ctx_pin"), i18n.t("menu_bookmarks_help"))
         item_props = None
         if not is_folder:
-            item_props = menu.Append(wx.ID_ANY, "Rincian Informasi Audio...", "Lihat metadata dan spesifikasi audio")
-        item_explorer = menu.Append(wx.ID_ANY, "Buka di File Explorer", "Tampilkan lokasi file di Windows Explorer")
-        item_copy = menu.Append(wx.ID_ANY, "Salin Jalur File", "Salin path lengkap ke papan klip")
+            item_props = menu.Append(wx.ID_ANY, i18n.t("ctx_inspector"), i18n.t("menu_inspector_help"))
+        item_explorer = menu.Append(wx.ID_ANY, i18n.t("ctx_open_exp"), i18n.t("menu_open_folder_exp_help"))
+        item_copy = menu.Append(wx.ID_ANY, i18n.t("ctx_copy_path"), i18n.t("spk_path_copied"))
 
         self.Bind(wx.EVT_MENU, lambda e: self.play_selected_item(), item_play)
         self.Bind(wx.EVT_MENU, lambda e: self.stream_features.pin_current_file(), item_pin)
@@ -1511,7 +1809,7 @@ class StreamerFrame(wx.Frame):
     def open_in_explorer(self, target_path):
         """Opens file location in Windows Explorer."""
         if not target_path or not os.path.exists(target_path):
-            self.speak("Jalur tidak ditemukan")
+            self.speak(i18n.t("spk_path_not_found"))
             return
         norm_path = os.path.normpath(target_path)
         try:
@@ -1519,25 +1817,25 @@ class StreamerFrame(wx.Frame):
                 subprocess.Popen(f'explorer "{norm_path}"')
             else:
                 subprocess.Popen(f'explorer /select,"{norm_path}"')
-            self.speak("Membuka File Explorer")
+            self.speak(i18n.t("spk_explorer_opened"))
         except Exception as e:
-            self.speak(f"Gagal membuka explorer: {e}")
+            self.speak(i18n.t("spk_explorer_failed", err=str(e)))
 
     def copy_file_path(self, target_path):
         """Copies file path to clipboard."""
         if not target_path:
-            self.speak("Tidak ada jalur yang dipilih")
+            self.speak(i18n.t("spk_no_path_selected"))
             return
         norm_path = os.path.normpath(target_path)
         try:
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(wx.TextDataObject(norm_path))
                 wx.TheClipboard.Close()
-                self.speak("Jalur file berhasil disalin")
+                self.speak(i18n.t("spk_clip_success"))
             else:
-                self.speak("Gagal mengakses papan klip")
+                self.speak(i18n.t("spk_clip_failed"))
         except Exception:
-            self.speak("Gagal menyalin jalur file")
+            self.speak(i18n.t("spk_clip_failed"))
 
     def show_metadata_dialog(self, file_path=None):
         """Shows technical metadata inspector dialog."""
@@ -1550,7 +1848,7 @@ class StreamerFrame(wx.Frame):
                 file_path = os.path.join(self.current_folder, self.current_playing_file)
 
         if not file_path or not os.path.exists(file_path):
-            self.speak("Pilih file terlebih dahulu")
+            self.speak(i18n.t("spk_no_selection"))
             return
 
         if hasattr(self, 'stream_features'):
@@ -1600,7 +1898,7 @@ class StreamerFrame(wx.Frame):
         utils.save_setting("obs_export", val)
         if val and self.current_playing_file:
             self.stream_features.export_now_playing(self.current_playing_file)
-        self.speak("Ekspor OBS diaktifkan" if val else "Ekspor OBS dinonaktifkan")
+        self.speak(i18n.t("spk_obs_enabled") if val else i18n.t("spk_obs_disabled"))
 
     def on_eq_choice_changed(self, event):
         preset = self.eq_choice.GetStringSelection()
@@ -1643,7 +1941,7 @@ class StreamerFrame(wx.Frame):
                 except Exception:
                     pass
         if speak:
-            self.speak(f"Equalizer diatur ke {preset}")
+            self.speak(i18n.t("spk_eq_set", preset=preset))
 
     def on_toggle_normalize_chk(self, event):
         val = self.chk_normalize.GetValue()
@@ -1671,7 +1969,7 @@ class StreamerFrame(wx.Frame):
                 except Exception:
                     pass
         if speak:
-            self.speak("Normalisasi audio diaktifkan" if enabled else "Normalisasi audio dinonaktifkan")
+            self.speak(i18n.t("spk_norm_on") if enabled else i18n.t("spk_norm_off"))
 
     def on_toggle_mono_chk(self, event):
         val = self.chk_mono.GetValue()
@@ -1699,7 +1997,7 @@ class StreamerFrame(wx.Frame):
                 except Exception:
                     pass
         if speak:
-            self.speak("Audio mono diaktifkan" if enabled else "Audio stereo diaktifkan")
+            self.speak(i18n.t("spk_mono_on") if enabled else i18n.t("spk_mono_off"))
 
     def open_now_playing_file(self, event):
         path = os.path.abspath("now_playing.txt")
@@ -1711,21 +2009,20 @@ class StreamerFrame(wx.Frame):
                 pass
         if os.path.exists(path):
             subprocess.Popen(f'notepad.exe "{path}"')
-            self.speak("Membuka now_playing.txt")
+            self.speak(i18n.t("spk_obs_opened"))
         else:
-            self.speak("File now_playing.txt belum dibuat")
+            self.speak(i18n.t("spk_obs_missing"))
 
     def on_about(self, event):
-        msg = "Streamer App\nMedia player bersih dan aksesibel untuk streaming dan penggunaan harian.\nDirancang dengan dukungan pembaca layar penuh."
-        dlg = wx.MessageDialog(self, msg, "Tentang Streamer App", wx.OK | wx.ICON_INFORMATION)
-        self.speak("Tentang Streamer App. Media player bersih dan aksesibel.")
+        dlg = wx.MessageDialog(self, i18n.t("about_body"), i18n.t("about_title"), wx.OK | wx.ICON_INFORMATION)
+        self.speak(i18n.t("about_title"))
         dlg.ShowModal()
         dlg.Destroy()
 
     def adjust_pitch(self, change):
         if not self.player:
             return
-        self.speak("Kontrol pitch memerlukan filter audio tambahan")
+        self.speak(i18n.t("spk_pitch_not_supported"))
 
     def adjust_speed(self, change):
         if not self.player:
@@ -1734,6 +2031,6 @@ class StreamerFrame(wx.Frame):
         new_speed = max(0.25, min(4.0, current_speed + change))
         try:
             self.player.mp.speed = new_speed
-            self.speak(f"Kecepatan {new_speed:.1f}x")
+            self.speak(i18n.t("spk_speed_set", speed=f"{new_speed:.1f}"))
         except Exception:
             pass

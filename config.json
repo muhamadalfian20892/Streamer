@@ -35,5 +35,14 @@
     "equalizer": "flat",
     "mono": false,
     "normalize": false,
-    "shuffle": true
+    "shuffle": true,
+    "remember_window_pos": true,
+    "shuffle_default": true,
+    "nvda_verbosity": "verbose",
+    "speech_verbosity": "verbose",
+    "audio_cues": true,
+    "sound_cues": true,
+    "sleep_timer": "Off",
+    "sleep_timer_minutes": 0,
+    "language": "id"
 }

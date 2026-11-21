@@ -1,0 +1,906 @@
+"""
+Localization and internationalization (i18n) module for Streamer App.
+Supports live dynamic language switching between Bahasa Indonesia and English without application restart.
+"""
+
+import utils
+
+# Current active language in memory: 'id' or 'en'
+_current_lang = "id"
+
+# Registered listeners that want to be notified when language changes
+_listeners = []
+
+TRANSLATIONS = {
+    "id": {
+        # App
+        "app_title": "Streamer App",
+        "ready": "Siap",
+        "lang_name_id": "Bahasa Indonesia",
+        "lang_name_en": "English",
+        "lang_switched": "Bahasa berhasil diubah ke Bahasa Indonesia.",
+
+        # Menu Bar - Categories
+        "menu_file": "&Berkas",
+        "menu_playback": "&Pemutaran",
+        "menu_audio": "&Audio",
+        "menu_view": "&Tampilan",
+        "menu_language": "&Bahasa",
+        "menu_tools": "&Alat",
+        "menu_help": "&Bantuan",
+
+        # Menu Bar - File
+        "menu_open_folder": "Buka &Folder...\tCtrl+O",
+        "menu_open_folder_help": "Pilih folder media untuk dimuat",
+        "menu_open_file": "Buka F&ile...\tCtrl+Shift+O",
+        "menu_open_file_help": "Pilih file media tertentu",
+        "menu_refresh": "&Segarkan Daftar\tF5",
+        "menu_refresh_help": "Perbarui isi folder saat ini",
+        "menu_settings": "&Pengaturan...\tCtrl+P",
+        "menu_settings_help": "Buka jendela pengaturan dan preferensi",
+        "menu_exit": "&Keluar\tAlt+F4",
+        "menu_exit_help": "Tutup aplikasi",
+
+        # Menu Bar - Playback
+        "menu_play_pause": "&Putar / Jeda\tSpace",
+        "menu_play_pause_help": "Mulai atau jeda pemutaran",
+        "menu_stop": "&Berhenti\tCtrl+S",
+        "menu_stop_help": "Hentikan pemutaran lagu saat ini",
+        "menu_prev": "Lagu Se&belumnya\tCtrl+Left",
+        "menu_prev_help": "Putar lagu sebelumnya dalam daftar",
+        "menu_next": "Lagu &Berikutnya\tCtrl+Right",
+        "menu_next_help": "Putar lagu berikutnya dalam daftar",
+        "menu_rewind": "&Mundur 5 Detik",
+        "menu_rewind_help": "Mundur pemutaran 5 detik",
+        "menu_forward": "Ma&ju 5 Detik",
+        "menu_forward_help": "Maju pemutaran 5 detik",
+        "menu_loop": "&Ulangi Lagu (Loop)\tCtrl+L",
+        "menu_loop_help": "Aktifkan pengulangan lagu",
+        "menu_shuffle": "Putar &Acak (Shuffle)",
+        "menu_shuffle_help": "Aktifkan pemutaran lagu acak",
+        "menu_mute": "&Bisu (Mute)\tCtrl+M",
+        "menu_mute_help": "Matikan atau hidupkan suara",
+
+        # Menu Bar - Audio
+        "menu_vol_up": "&Naikkan Volume\tCtrl+Up",
+        "menu_vol_up_help": "Naikkan volume suara",
+        "menu_vol_down": "&Turunkan Volume\tCtrl+Down",
+        "menu_vol_down_help": "Turunkan volume suara",
+        "menu_eq_submenu": "Preset &Equalizer",
+        "menu_eq_flat": "Datar (Flat)",
+        "menu_eq_flat_help": "Profil equalizer standar",
+        "menu_eq_bass": "Penguat Bass (Bass Boost)",
+        "menu_eq_bass_help": "Tingkatkan nada rendah",
+        "menu_eq_treble": "Penguat Treble (Treble Boost)",
+        "menu_eq_treble_help": "Tingkatkan nada tinggi",
+        "menu_eq_vocal": "Fokus Vokal (Vocal)",
+        "menu_eq_vocal_help": "Tingkatkan kejelasan vokal",
+        "menu_audio_norm": "&Normalisasi Audio",
+        "menu_audio_norm_help": "Ratakan kenyaringan audio otomatis",
+        "menu_audio_mono": "Konversi &Mono",
+        "menu_audio_mono_help": "Gabungkan suara stereo ke mono",
+        "menu_rescan_devices": "Pindai Ulang &Perangkat Audio",
+        "menu_rescan_devices_help": "Segarkan daftar perangkat output suara yang tersambung",
+
+        # Menu Bar - View
+        "menu_mode_standard": "Mode &Standar",
+        "menu_mode_standard_help": "Tampilan kontrol pemutar media bersih",
+        "menu_mode_advanced": "Mode &Lanjutan",
+        "menu_mode_advanced_help": "Tampilkan fitur lanjutan streamer",
+        "menu_view_all": "Tampilkan &Semua",
+        "menu_view_all_help": "Tampilkan semua file dan folder",
+        "menu_view_files": "Hanya &File",
+        "menu_view_files_help": "Sembunyikan folder dari daftar",
+        "menu_view_folders": "Hanya F&older",
+        "menu_view_folders_help": "Sembunyikan file dari daftar",
+        "menu_toggle_time": "Alihkan Tampilan &Waktu Sisa",
+        "menu_toggle_time_help": "Beralih antara waktu berlalu dan sisa waktu",
+
+        # Menu Bar - Language
+        "menu_lang_id": "Bahasa Indonesia",
+        "menu_lang_id_help": "Ganti bahasa aplikasi ke Bahasa Indonesia",
+        "menu_lang_en": "English",
+        "menu_lang_en_help": "Switch application language to English",
+
+        # Menu Bar - Tools
+        "menu_marker": "&Tambah Penanda Streaming\tF9",
+        "menu_marker_help": "Catat stempel waktu streaming",
+        "menu_bookmarks": "Pengelola &Bookmark...",
+        "menu_bookmarks_help": "Kelola dan lompat ke penanda waktu",
+        "menu_inspector": "&Inspektur Metadata Audio...",
+        "menu_inspector_help": "Lihat rincian metadata teknis file audio",
+        "menu_sleep": "Pengatur Waktu &Tidur (Sleep Timer)...",
+        "menu_sleep_help": "Buka dialog pengatur waktu tidur",
+        "menu_open_folder_exp": "Buka Folder di File &Explorer",
+        "menu_open_folder_exp_help": "Buka lokasi folder saat ini di Windows Explorer",
+        "menu_open_obs_txt": "Buka now_playing.&txt",
+        "menu_open_obs_txt_help": "Buka file output judul lagu OBS",
+
+        # Menu Bar - Help
+        "menu_guide": "&Panduan Penggunaan\tF1",
+        "menu_guide_help": "Buka panduan lengkap aplikasi",
+        "menu_wizard": "&Wizard Mulai Cepat...",
+        "menu_wizard_help": "Tampilkan panduan untuk pengguna baru",
+        "menu_about": "&Tentang Streamer App",
+        "menu_about_help": "Informasi versi dan pembuat aplikasi",
+
+        # Top Navigation Controls
+        "btn_open_folder": "Buka Folder (Ctrl+O)",
+        "btn_open_folder_tip": "Buka folder berisi file media untuk diputar (Ctrl+O)",
+        "btn_open_file": "Buka File",
+        "btn_open_file_tip": "Pilih satu file media tertentu untuk diputar (Ctrl+Shift+O)",
+        "btn_settings": "Pengaturan (Ctrl+P)",
+        "btn_settings_tip": "Buka dialog preferensi dan pengaturan aplikasi (Ctrl+P)",
+        "recent_folders_name": "Daftar Folder Terkini",
+        "recent_folders_tip": "Pilih folder yang baru saja dibuka sebelumnya",
+
+        # Search & Filter
+        "label_search": "Cari:",
+        "label_search_tip": "Label untuk kotak pencarian",
+        "search_name": "Kotak Pencarian File",
+        "search_tip": "Ketik kata kunci untuk menyaring nama file secara instan",
+        "label_view_filter": "Filter Tampilan:",
+        "label_view_filter_tip": "Label untuk filter tampilan file dan folder",
+        "view_filter_name": "Filter Tampilan File",
+        "view_filter_tip": "Saring tampilan antara semua item, hanya file media, atau hanya folder",
+        "filter_all": "Semua",
+        "filter_files": "Hanya File",
+        "filter_folders": "Hanya Folder",
+
+        # File List & Video
+        "list_name": "Daftar File dan Folder",
+        "list_tip": "Daftar file dan folder. Tekan Spasi untuk putar atau jeda, Enter untuk buka.",
+        "col_name": "Nama File",
+        "video_panel_name": "Panel Tampilan Video",
+        "video_panel_tip": "Area visual pemutaran video",
+
+        # Playback Controls
+        "time_btn_name": "Penunjuk Waktu Pemutaran",
+        "time_btn_tip": "Waktu pemutaran. Klik atau tekan Spasi untuk beralih antara waktu berlalu dan sisa waktu.",
+        "seek_slider_name": "Slider Posisi Putar",
+        "seek_slider_tip": "Geser atau gunakan tombol panah untuk mengatur posisi pemutaran",
+        "btn_prev": "Sebelumnya",
+        "btn_prev_name": "Lagu Sebelumnya",
+        "btn_prev_tip": "Putar file sebelumnya dalam daftar (Ctrl+Left)",
+        "btn_rewind": "-5s",
+        "btn_rewind_name": "Mundur 5 Detik",
+        "btn_rewind_tip": "Mundur pemutaran 5 detik (Left)",
+        "btn_play": "Putar",
+        "btn_pause": "Jeda",
+        "btn_play_pause_name": "Putar atau Jeda",
+        "btn_play_pause_tip": "Mulai atau jeda pemutaran file (Spasi)",
+        "btn_stop": "Stop",
+        "btn_stop_name": "Hentikan Pemutaran",
+        "btn_stop_tip": "Hentikan pemutaran lagu saat ini (Ctrl+S)",
+        "btn_forward": "+5s",
+        "btn_forward_name": "Maju 5 Detik",
+        "btn_forward_tip": "Maju pemutaran 5 detik (Right)",
+        "btn_next": "Berikutnya",
+        "btn_next_name": "Lagu Berikutnya",
+        "btn_next_tip": "Putar file berikutnya dalam daftar (Ctrl+Right)",
+        "btn_mute": "Mute",
+        "btn_mute_active": "Bisu Aktif",
+        "btn_mute_name": "Tombol Bisu",
+        "btn_mute_tip": "Matikan atau nyalakan suara audio (Ctrl+M)",
+        "btn_loop_on": "Loop Hidup",
+        "btn_loop_off": "Loop Mati",
+        "btn_loop_name": "Tombol Pengulangan",
+        "btn_loop_tip": "Ulangi pemutaran file secara terus menerus (Ctrl+L)",
+        "btn_shuffle_on": "Acak: Hidup",
+        "btn_shuffle_off": "Acak: Mati",
+        "btn_shuffle_name": "Tombol Putar Acak",
+        "btn_shuffle_tip": "Aktifkan atau nonaktifkan pemutaran lagu secara acak",
+
+        # Volume & Device
+        "label_volume": "Volume:",
+        "label_volume_tip": "Label volume suara pemutar",
+        "slider_volume_name": "Slider Volume Suara",
+        "slider_volume_tip": "Atur tingkat volume suara (0 sampai 150%)",
+        "label_device": "Perangkat Audio:",
+        "label_device_tip": "Label perangkat output suara",
+        "choice_device_name": "Pilihan Perangkat Audio",
+        "choice_device_tip": "Pilih perangkat output suara yang digunakan",
+
+        # Advanced Panel
+        "adv_panel_name": "Panel Fitur Lanjutan Streamer",
+        "adv_panel_tip": "Panel fitur khusus streamer: penanda streaming, bookmark, dan efek audio",
+        "adv_box_label": "Fitur Lanjutan Streamer",
+        "btn_marker": "Penanda Stream (F9)",
+        "btn_marker_name": "Tambah Penanda Streaming",
+        "btn_marker_tip": "Catat stempel waktu streaming saat ini ke file stream_timestamps.txt (F9)",
+        "btn_bookmarks": "Bookmarks",
+        "btn_bookmarks_name": "Pengelola Bookmark",
+        "btn_bookmarks_tip": "Kelola dan lompat ke penanda waktu yang disimpan",
+        "btn_inspector": "Info Metadata",
+        "btn_inspector_name": "Inspektur Metadata Audio",
+        "btn_inspector_tip": "Buka rincian informasi teknis dan metadata file audio",
+        "chk_obs": "Ekspor Teks OBS",
+        "chk_obs_name": "Ekspor Teks OBS",
+        "chk_obs_tip": "Tulis judul lagu yang sedang diputar ke file now_playing.txt untuk OBS Studio",
+        "label_eq": "Equalizer:",
+        "label_eq_tip": "Label pilihan equalizer",
+        "choice_eq_name": "Preset Equalizer",
+        "choice_eq_tip": "Pilih profil equalizer audio",
+        "chk_normalize": "Normalisasi Audio",
+        "chk_normalize_name": "Normalisasi Audio",
+        "chk_normalize_tip": "Ratakan volume audio secara otomatis",
+        "chk_mono": "Audio Mono",
+        "chk_mono_name": "Konversi Audio Mono",
+        "chk_mono_tip": "Gabungkan kanal audio kiri dan kanan menjadi mono",
+
+        # Status Bar
+        "status_ready": "Siap",
+        "status_playing": "Memutar: {name}",
+        "status_paused": "Dijeda: {name}",
+        "status_stopped": "Berhenti",
+        "status_files_count": "{count} file",
+        "status_vol": "Vol: {vol}%",
+        "status_muted": "Bisu",
+        "status_mode_standard": "Mode: Standar",
+        "status_mode_advanced": "Mode: Lanjutan",
+
+        # Context Menu
+        "ctx_play": "Putar / Buka\tEnter",
+        "ctx_pin": "Tambah ke Favorit\tCtrl+D",
+        "ctx_inspector": "Rincian Informasi Audio...",
+        "ctx_open_exp": "Buka di File Explorer",
+        "ctx_copy_path": "Salin Jalur File",
+
+        # Speech & Dialog Alerts
+        "spk_folder_loaded": "Folder dimuat. {count} item.",
+        "spk_file_found": "Ditemukan {count} file.",
+        "spk_no_selection": "Tidak ada item yang dipilih.",
+        "spk_playing": "Memutar {name}.",
+        "spk_paused": "Pemutaran dijeda.",
+        "spk_stopped": "Pemutaran dihentikan.",
+        "spk_folder_refreshed": "Daftar folder disegarkan.",
+        "spk_settings_saved": "Pengaturan berhasil disimpan.",
+        "spk_loop_on": "Pengulangan lagu aktif.",
+        "spk_loop_off": "Pengulangan lagu dinonaktifkan.",
+        "spk_shuffle_on": "Pemutaran acak aktif.",
+        "spk_shuffle_off": "Pemutaran acak dinonaktifkan.",
+        "spk_audio_muted": "Audio dibisukan.",
+        "spk_audio_unmuted": "Audio diaktifkan kembali.",
+        "spk_vol_level": "Volume {val} persen.",
+        "spk_dev_set": "Perangkat audio diubah ke {name}.",
+        "spk_dev_refreshed": "Daftar perangkat audio disegarkan. Ditemukan {count} perangkat.",
+        "spk_marker_saved": "Penanda streaming disimpan.",
+        "spk_marker_error": "Gagal menyimpan penanda streaming.",
+        "spk_dir_boundary": "Batas direktori teratas.",
+        "spk_drag_folder": "Folder dimuat dari seret dan lepas: {name}.",
+        "spk_drag_file": "File diputar dari seret dan lepas: {name}.",
+        "spk_mode_switched": "Beralih ke {mode}.",
+        "spk_fav_added": "{name} ditambahkan ke daftar favorit.",
+        "spk_fav_exists": "{name} sudah ada di daftar favorit.",
+        "spk_path_copied": "Jalur file disalin ke clipboard.",
+        "spk_jump_to": "Melompat ke posisi {time}.",
+        "spk_bookmark_deleted": "Bookmark berhasil dihapus.",
+        "spk_bookmark_added": "Bookmark disimpan pada {time}.",
+        "spk_speed_set": "Kecepatan {speed}x.",
+
+        # Settings Dialog
+        "settings_title": "Pengaturan & Preferensi",
+        "settings_general_box": "Umum & Bahasa",
+        "settings_lang_label": "Bahasa Antarmuka (Language):",
+        "settings_lang_tip": "Pilih bahasa tampilan dan pembaca layar.",
+        "settings_mode_label": "Mode Tampilan Aplikasi:",
+        "settings_mode_tip": "Pilih Mode Standard untuk pemutar musik bersih tanpa alat streamer, atau Mode Advanced untuk fitur lengkap.",
+        "settings_mode_opt_standard": "Standard (Pemutar Audio Sederhana)",
+        "settings_mode_opt_advanced": "Advanced (Fitur Lengkap Streamer)",
+        "settings_resume": "Buka kembali folder terakhir saat aplikasi dimulai",
+        "settings_resume_tip": "Memuat daftar lagu dari folder yang terakhir dibuka saat dijalankan kembali.",
+        "settings_remember_pos": "Ingat posisi dan ukuran jendela",
+        "settings_remember_pos_tip": "Menyimpan letak dan ukuran jendela aplikasi agar selalu terbuka di posisi yang sama.",
+        "settings_playback_box": "Pemutaran & Navigasi",
+        "settings_autoplay": "Putar lagu berikutnya secara otomatis",
+        "settings_autoplay_tip": "Melanjutkan pemutaran ke lagu berikutnya dalam daftar saat trek selesai.",
+        "settings_vol_step": "Langkah Perubahan Volume (%):",
+        "settings_vol_step_tip": "Besaran perubahan volume setiap kali menekan tombol pintasan volume (1 sampai 25 persen).",
+        "settings_seek_step": "Langkah Lompatan Waktu (detik):",
+        "settings_seek_step_tip": "Lompatan waktu maju atau mundur saat menekan tombol navigasi (1 sampai 60 detik).",
+        "settings_vol_max": "Batas Maksimal Volume (%):",
+        "settings_vol_max_tip": "Batas maksimal slider volume (100% standar atau 150% dorongan suara).",
+        "settings_audio_box": "Audio & Equalizer",
+        "settings_eq_label": "Profil Equalizer Bawaan:",
+        "settings_eq_tip": "Pilih profil equalizer awal saat aplikasi dijalankan.",
+        "settings_norm": "Aktifkan normalisasi volume otomatis",
+        "settings_norm_tip": "Ratakan volume lagu secara dinamis agar lagu yang terlalu pelan atau keras terdengar seimbang.",
+        "settings_mono": "Aktifkan konversi audio mono",
+        "settings_mono_tip": "Gabungkan saluran stereo menjadi mono untuk kebutuhan monitoring satu telinga.",
+        "settings_fade_next": "Gunakan efek fade out saat mengganti lagu",
+        "settings_fade_next_tip": "Mengecilkan suara secara lembut sebelum lagu berikutnya diputar.",
+        "settings_fade_pause": "Gunakan efek fade out saat menjeda lagu",
+        "settings_fade_pause_tip": "Mengecilkan suara lembut saat jeda dan membesarkan kembali saat lanjut diputar.",
+        "settings_fade_dur": "Durasi Fading (detik):",
+        "settings_fade_dur_tip": "Lama waktu transisi pengecilan atau pembesaran volume (0.1 sampai 10 detik).",
+        "settings_acc_box": "Aksesibilitas & Suara Layar",
+        "settings_verbosity_label": "Tingkat Pengumuman Suara NVDA:",
+        "settings_verbosity_tip": "Lengkap untuk pengumuman detail, Minimal untuk informasi penting saja, atau Senyap untuk hening.",
+        "settings_verb_verbose": "Lengkap (Verbose) - Umumkan semua perubahan",
+        "settings_verb_minimal": "Minimal - Hanya umumkan perubahan penting",
+        "settings_verb_silent": "Senyap (Silent) - Tanpa pengumuman suara",
+        "settings_cues": "Putar nada saat mencapai batas atas atau bawah daftar",
+        "settings_cues_tip": "Memutar nada frekuensi khusus ketika pengguna mencapai batas atas atau batas bawah daftar file.",
+        "settings_tools_box": "Alat Streaming & Sleep Timer",
+        "settings_sleep_label": "Durasi Pengatur Waktu Tidur (Sleep Timer):",
+        "settings_sleep_tip": "Otomatis hentikan pemutaran lagu setelah waktu yang ditentukan habis.",
+        "settings_obs": "Ekspor judul lagu yang sedang diputar untuk OBS (now_playing.txt)",
+        "settings_obs_tip": "Menulis judul lagu aktif secara otomatis ke file now_playing.txt untuk integrasi siaran OBS.",
+        "btn_save_apply": "Simpan & Terapkan",
+        "btn_cancel": "Batal",
+
+        # Metadata Dialog
+        "meta_title": "Rincian Informasi Audio",
+        "meta_file_name": "Nama File: {val}",
+        "meta_file_loc": "Lokasi: {val}",
+        "meta_file_size": "Ukuran File: {val}",
+        "meta_file_format": "Format File: {val}",
+        "meta_duration": "Durasi: {val}",
+        "meta_codec": "Codec Audio: {val}",
+        "meta_samplerate": "Sample Rate: {val} Hz",
+        "meta_channels": "Kanal Suara: {val}",
+        "meta_title_tag": "Judul: {val}",
+        "meta_artist_tag": "Artis: {val}",
+        "meta_album_tag": "Album: {val}",
+        "btn_copy_info": "Salin Info ke Clipboard",
+        "btn_close": "Tutup",
+
+        # Bookmarks Dialog
+        "bm_title": "Pengelola Bookmark Waktu",
+        "bm_list_label": "Daftar Bookmark:",
+        "bm_col_num": "No",
+        "bm_col_time": "Posisi Waktu",
+        "bm_col_label": "Catatan / Label",
+        "btn_bm_add": "Tambah Posisi Ini",
+        "btn_bm_add_tip": "Simpan posisi waktu pemutaran saat ini sebagai bookmark",
+        "btn_bm_jump": "Lompat ke Posisi",
+        "btn_bm_jump_tip": "Pindahkan pemutaran ke bookmark yang dipilih",
+        "btn_bm_del": "Hapus",
+        "btn_bm_del_tip": "Hapus bookmark yang dipilih dari daftar",
+        "btn_bm_clear": "Hapus Semua",
+        "btn_bm_clear_tip": "Menghapus seluruh bookmark untuk file audio ini",
+        "bm_prompt_title": "Tambah Bookmark Audio",
+        "bm_prompt_desc": "Masukkan catatan untuk bookmark pada posisi {time}:",
+        "bm_confirm_clear_title": "Konfirmasi Hapus Semua Bookmark",
+        "bm_confirm_clear_msg": "Apakah Anda yakin ingin menghapus seluruh bookmark untuk file ini?",
+
+        # Sleep Timer Dialog
+        "sleep_title": "Pengatur Waktu Tidur (Sleep Timer)",
+        "sleep_desc": "Pilihan Durasi:",
+        "sleep_choice_tip": "Pilih durasi waktu sebelum audio berhenti otomatis",
+        "sleep_custom_label": "Durasi kustom (menit):",
+        "sleep_custom_tip": "Masukkan durasi dalam menit jika memilih opsi kustom",
+        "sleep_status_active": "Status timer: Aktif, sisa waktu {time}",
+        "sleep_status_idle": "Status timer: Tidak aktif",
+        "sleep_opt_off": "Mati (Nonaktif)",
+        "sleep_opt_15": "15 Menit",
+        "sleep_opt_30": "30 Menit",
+        "sleep_opt_45": "45 Menit",
+        "sleep_opt_60": "60 Menit",
+        "sleep_opt_custom": "Kustom",
+        "btn_sleep_start": "Aktifkan Timer",
+        "btn_sleep_cancel": "Matikan Timer",
+        "spk_sleep_started": "Pengatur waktu tidur diatur selama {mins} menit.",
+        "spk_sleep_cancelled": "Pengatur waktu tidur dibatalkan.",
+        "spk_sleep_done": "Pengatur waktu tidur selesai. Pemutaran dihentikan.",
+
+        # Additional Speech Alerts
+        "spk_meta_opened": "Informasi file audio {name} terbuka.",
+        "spk_meta_copied": "Metadata berhasil disalin ke papan klip.",
+        "spk_bm_opened": "Dialog Bookmark dibuka. {count} penanda tersedia.",
+        "spk_bm_cleared": "Semua bookmark untuk file ini telah dihapus.",
+        "spk_bm_none": "Tidak ada bookmark untuk dihapus.",
+        "spk_bm_select_first": "Pilih bookmark terlebih dahulu.",
+        "spk_bm_no_active_file": "Tidak ada file audio yang sedang dipilih atau diputar.",
+        "spk_obs_opened": "Membuka now_playing.txt",
+        "spk_obs_missing": "File now_playing.txt belum dibuat.",
+        "spk_obs_enabled": "Ekspor OBS diaktifkan.",
+        "spk_obs_disabled": "Ekspor OBS dinonaktifkan.",
+        "spk_explorer_opened": "Membuka File Explorer.",
+        "spk_explorer_failed": "Gagal membuka explorer: {err}",
+        "spk_clip_failed": "Gagal mengakses papan klip.",
+        "spk_clip_success": "Jalur file berhasil disalin.",
+        "spk_path_not_found": "Jalur tidak ditemukan.",
+        "spk_no_path_selected": "Tidak ada jalur yang dipilih.",
+        "spk_first_track_reached": "Awal daftar lagu tercapai.",
+        "spk_last_track_reached": "Akhir daftar lagu tercapai.",
+        "spk_empty_list": "Daftar file kosong.",
+        "spk_no_audio_files": "Tidak ada file audio dalam daftar.",
+        "spk_time_remaining": "Menampilkan sisa waktu.",
+        "spk_time_elapsed": "Menampilkan waktu berlalu.",
+        "spk_pitch_not_supported": "Kontrol pitch memerlukan filter audio tambahan.",
+        "spk_audio_ducked": "Audio ducking aktif.",
+        "spk_audio_normal": "Audio normal.",
+        "spk_eq_set": "Equalizer diatur ke {preset}.",
+        "spk_norm_on": "Normalisasi audio diaktifkan.",
+        "spk_norm_off": "Normalisasi audio dinonaktifkan.",
+        "spk_mono_on": "Audio mono diaktifkan.",
+        "spk_mono_off": "Audio stereo diaktifkan.",
+
+        # About Dialog
+        "about_title": "Tentang Streamer App",
+        "about_body": "Streamer App versi 2.0\n\nPemutar audio dan media aksesibel untuk pengguna pembaca layar dan kreator streaming.\nDilengkapi dukungan Mode Standar, Mode Lanjutan, pengatur waktu tidur, dan pergantian bahasa instan.",
+    },
+
+    "en": {
+        # App
+        "app_title": "Streamer App",
+        "ready": "Ready",
+        "lang_name_id": "Bahasa Indonesia",
+        "lang_name_en": "English",
+        "lang_switched": "Language successfully switched to English.",
+
+        # Menu Bar - Categories
+        "menu_file": "&File",
+        "menu_playback": "&Playback",
+        "menu_audio": "&Audio",
+        "menu_view": "&View",
+        "menu_language": "&Language",
+        "menu_tools": "&Tools",
+        "menu_help": "&Help",
+
+        # Menu Bar - File
+        "menu_open_folder": "Open &Folder...\tCtrl+O",
+        "menu_open_folder_help": "Select a media folder to load",
+        "menu_open_file": "Open F&ile...\tCtrl+Shift+O",
+        "menu_open_file_help": "Select a specific media file to play",
+        "menu_refresh": "&Refresh List\tF5",
+        "menu_refresh_help": "Refresh the contents of current folder",
+        "menu_settings": "&Settings...\tCtrl+P",
+        "menu_settings_help": "Open preferences and settings window",
+        "menu_exit": "E&xit\tAlt+F4",
+        "menu_exit_help": "Close the application",
+
+        # Menu Bar - Playback
+        "menu_play_pause": "&Play / Pause\tSpace",
+        "menu_play_pause_help": "Start or pause media playback",
+        "menu_stop": "&Stop\tCtrl+S",
+        "menu_stop_help": "Stop current track playback",
+        "menu_prev": "Pre&vious Track\tCtrl+Left",
+        "menu_prev_help": "Play previous track in the playlist",
+        "menu_next": "&Next Track\tCtrl+Right",
+        "menu_next_help": "Play next track in the playlist",
+        "menu_rewind": "&Rewind 5 Seconds",
+        "menu_rewind_help": "Rewind playback by 5 seconds",
+        "menu_forward": "&Forward 5 Seconds",
+        "menu_forward_help": "Forward playback by 5 seconds",
+        "menu_loop": "&Loop Track\tCtrl+L",
+        "menu_loop_help": "Toggle continuous track looping",
+        "menu_shuffle": "&Shuffle Tracks",
+        "menu_shuffle_help": "Toggle randomized track playback",
+        "menu_mute": "&Mute\tCtrl+M",
+        "menu_mute_help": "Mute or unmute audio sound",
+
+        # Menu Bar - Audio
+        "menu_vol_up": "Volume &Up\tCtrl+Up",
+        "menu_vol_up_help": "Increase audio volume level",
+        "menu_vol_down": "Volume &Down\tCtrl+Down",
+        "menu_vol_down_help": "Decrease audio volume level",
+        "menu_eq_submenu": "&Equalizer Presets",
+        "menu_eq_flat": "Flat",
+        "menu_eq_flat_help": "Standard neutral equalizer profile",
+        "menu_eq_bass": "Bass Boost",
+        "menu_eq_bass_help": "Enhance low audio frequencies",
+        "menu_eq_treble": "Treble Boost",
+        "menu_eq_treble_help": "Enhance high audio frequencies",
+        "menu_eq_vocal": "Vocal Focus",
+        "menu_eq_vocal_help": "Improve speech and vocal clarity",
+        "menu_audio_norm": "&Audio Normalization",
+        "menu_audio_norm_help": "Automatically balance audio loudness across tracks",
+        "menu_audio_mono": "&Mono Downmix",
+        "menu_audio_mono_help": "Downmix stereo audio channels to mono",
+        "menu_rescan_devices": "Rescan Audio &Devices",
+        "menu_rescan_devices_help": "Refresh the list of connected audio output devices",
+
+        # Menu Bar - View
+        "menu_mode_standard": "&Standard Mode",
+        "menu_mode_standard_help": "Clean and distraction free media player layout",
+        "menu_mode_advanced": "&Advanced Mode",
+        "menu_mode_advanced_help": "Show streamer tools and advanced features",
+        "menu_view_all": "Show &All",
+        "menu_view_all_help": "Show both files and folders",
+        "menu_view_files": "&Files Only",
+        "menu_view_files_help": "Hide subfolders from the list",
+        "menu_view_folders": "F&olders Only",
+        "menu_view_folders_help": "Hide media files from the list",
+        "menu_toggle_time": "Toggle &Remaining Time Display",
+        "menu_toggle_time_help": "Switch between elapsed time and remaining time",
+
+        # Menu Bar - Language
+        "menu_lang_id": "Bahasa Indonesia",
+        "menu_lang_id_help": "Switch application language to Bahasa Indonesia",
+        "menu_lang_en": "English",
+        "menu_lang_en_help": "Ganti bahasa aplikasi ke Bahasa Inggris",
+
+        # Menu Bar - Tools
+        "menu_marker": "&Add Stream Marker\tF9",
+        "menu_marker_help": "Record current stream timestamp",
+        "menu_bookmarks": "&Bookmarks Manager...",
+        "menu_bookmarks_help": "Manage and jump to saved time marks",
+        "menu_inspector": "Audio &Metadata Inspector...",
+        "menu_inspector_help": "Inspect technical properties and audio metadata",
+        "menu_sleep": "&Sleep Timer...",
+        "menu_sleep_help": "Open sleep timer configuration dialog",
+        "menu_open_folder_exp": "Open Folder in File &Explorer",
+        "menu_open_folder_exp_help": "Open current folder location in Windows Explorer",
+        "menu_open_obs_txt": "Open now_playing.&txt",
+        "menu_open_obs_txt_help": "Open OBS now playing output text file",
+
+        # Menu Bar - Help
+        "menu_guide": "&User Guide\tF1",
+        "menu_guide_help": "Open complete user guide",
+        "menu_wizard": "&Quick Start Wizard...",
+        "menu_wizard_help": "Show getting started guide for new users",
+        "menu_about": "&About Streamer App",
+        "menu_about_help": "Application version and credits information",
+
+        # Top Navigation Controls
+        "btn_open_folder": "Open Folder (Ctrl+O)",
+        "btn_open_folder_tip": "Open a folder containing media files (Ctrl+O)",
+        "btn_open_file": "Open File",
+        "btn_open_file_tip": "Select a single media file to play (Ctrl+Shift+O)",
+        "btn_settings": "Settings (Ctrl+P)",
+        "btn_settings_tip": "Open settings and preferences dialog (Ctrl+P)",
+        "recent_folders_name": "Recent Folders List",
+        "recent_folders_tip": "Select a folder that was previously opened",
+
+        # Search & Filter
+        "label_search": "Search:",
+        "label_search_tip": "Label for search text box",
+        "search_name": "File Search Box",
+        "search_tip": "Type keywords to filter files instantly",
+        "label_view_filter": "View Filter:",
+        "label_view_filter_tip": "Label for view filter selection",
+        "view_filter_name": "File View Filter",
+        "view_filter_tip": "Filter display between all items, media files only, or folders only",
+        "filter_all": "All",
+        "filter_files": "Files Only",
+        "filter_folders": "Folders Only",
+
+        # File List & Video
+        "list_name": "Files and Folders List",
+        "list_tip": "List of media files and folders. Press Space to play or pause, Enter to open.",
+        "col_name": "File Name",
+        "video_panel_name": "Video Display Panel",
+        "video_panel_tip": "Visual playback area for video media",
+
+        # Playback Controls
+        "time_btn_name": "Playback Time Indicator",
+        "time_btn_tip": "Playback time. Click or press Space to toggle between elapsed and remaining time.",
+        "seek_slider_name": "Playback Position Slider",
+        "seek_slider_tip": "Drag slider or use arrow keys to adjust playback position",
+        "btn_prev": "Previous",
+        "btn_prev_name": "Previous Track",
+        "btn_prev_tip": "Play previous track in the list (Ctrl+Left)",
+        "btn_rewind": "-5s",
+        "btn_rewind_name": "Rewind 5 Seconds",
+        "btn_rewind_tip": "Rewind playback by 5 seconds (Left)",
+        "btn_play": "Play",
+        "btn_pause": "Pause",
+        "btn_play_pause_name": "Play or Pause",
+        "btn_play_pause_tip": "Start or pause media playback (Space)",
+        "btn_stop": "Stop",
+        "btn_stop_name": "Stop Playback",
+        "btn_stop_tip": "Stop current playback (Ctrl+S)",
+        "btn_forward": "+5s",
+        "btn_forward_name": "Forward 5 Seconds",
+        "btn_forward_tip": "Forward playback by 5 seconds (Right)",
+        "btn_next": "Next",
+        "btn_next_name": "Next Track",
+        "btn_next_tip": "Play next track in the list (Ctrl+Right)",
+        "btn_mute": "Mute",
+        "btn_mute_active": "Muted",
+        "btn_mute_name": "Mute Button",
+        "btn_mute_tip": "Mute or unmute audio (Ctrl+M)",
+        "btn_loop_on": "Loop On",
+        "btn_loop_off": "Loop Off",
+        "btn_loop_name": "Loop Toggle Button",
+        "btn_loop_tip": "Loop current file continuously (Ctrl+L)",
+        "btn_shuffle_on": "Shuffle: On",
+        "btn_shuffle_off": "Shuffle: Off",
+        "btn_shuffle_name": "Shuffle Toggle Button",
+        "btn_shuffle_tip": "Enable or disable randomized track playback",
+
+        # Volume & Device
+        "label_volume": "Volume:",
+        "label_volume_tip": "Player volume label",
+        "slider_volume_name": "Volume Slider",
+        "slider_volume_tip": "Adjust audio volume level (0 to 150%)",
+        "label_device": "Audio Device:",
+        "label_device_tip": "Audio output device label",
+        "choice_device_name": "Audio Device Selection",
+        "choice_device_tip": "Select sound output device",
+
+        # Advanced Panel
+        "adv_panel_name": "Streamer Advanced Features Panel",
+        "adv_panel_tip": "Advanced tools for streamers: stream markers, bookmarks, and audio effects",
+        "adv_box_label": "Advanced Streamer Features",
+        "btn_marker": "Stream Marker (F9)",
+        "btn_marker_name": "Add Stream Marker",
+        "btn_marker_tip": "Record current stream timestamp into stream_timestamps.txt (F9)",
+        "btn_bookmarks": "Bookmarks",
+        "btn_bookmarks_name": "Bookmarks Manager",
+        "btn_bookmarks_tip": "Manage and jump to saved time marks",
+        "btn_inspector": "Metadata Info",
+        "btn_inspector_name": "Audio Metadata Inspector",
+        "btn_inspector_tip": "View technical properties and file metadata",
+        "chk_obs": "OBS Text Export",
+        "chk_obs_name": "OBS Text Export",
+        "chk_obs_tip": "Write currently playing title to now_playing.txt for OBS Studio",
+        "label_eq": "Equalizer:",
+        "label_eq_tip": "Equalizer profile label",
+        "choice_eq_name": "Equalizer Preset",
+        "choice_eq_tip": "Select audio equalizer profile",
+        "chk_normalize": "Audio Normalization",
+        "chk_normalize_name": "Audio Normalization",
+        "chk_normalize_tip": "Automatically balance audio loudness",
+        "chk_mono": "Mono Audio",
+        "chk_mono_name": "Mono Audio Downmix",
+        "chk_mono_tip": "Combine left and right stereo channels into mono",
+
+        # Status Bar
+        "status_ready": "Ready",
+        "status_playing": "Playing: {name}",
+        "status_paused": "Paused: {name}",
+        "status_stopped": "Stopped",
+        "status_files_count": "{count} files",
+        "status_vol": "Vol: {vol}%",
+        "status_muted": "Muted",
+        "status_mode_standard": "Mode: Standard",
+        "status_mode_advanced": "Mode: Advanced",
+
+        # Context Menu
+        "ctx_play": "Play / Open\tEnter",
+        "ctx_pin": "Add to Favorites\tCtrl+D",
+        "ctx_inspector": "Audio Technical Information...",
+        "ctx_open_exp": "Open in File Explorer",
+        "ctx_copy_path": "Copy File Path",
+
+        # Speech & Dialog Alerts
+        "spk_folder_loaded": "Folder loaded. {count} items.",
+        "spk_file_found": "Found {count} files.",
+        "spk_no_selection": "No item selected.",
+        "spk_playing": "Playing {name}.",
+        "spk_paused": "Playback paused.",
+        "spk_stopped": "Playback stopped.",
+        "spk_folder_refreshed": "Folder list refreshed.",
+        "spk_settings_saved": "Settings saved successfully.",
+        "spk_loop_on": "Track looping enabled.",
+        "spk_loop_off": "Track looping disabled.",
+        "spk_shuffle_on": "Shuffle playback enabled.",
+        "spk_shuffle_off": "Shuffle playback disabled.",
+        "spk_audio_muted": "Audio muted.",
+        "spk_audio_unmuted": "Audio unmuted.",
+        "spk_vol_level": "Volume {val} percent.",
+        "spk_dev_set": "Audio device set to {name}.",
+        "spk_dev_refreshed": "Audio devices rescanned. Found {count} devices.",
+        "spk_marker_saved": "Stream marker saved.",
+        "spk_marker_error": "Failed to save stream marker.",
+        "spk_dir_boundary": "Top directory boundary reached.",
+        "spk_drag_folder": "Folder loaded from drag and drop: {name}.",
+        "spk_drag_file": "File playing from drag and drop: {name}.",
+        "spk_mode_switched": "Switched to {mode}.",
+        "spk_fav_added": "{name} added to favorites list.",
+        "spk_fav_exists": "{name} is already in favorites list.",
+        "spk_path_copied": "File path copied to clipboard.",
+        "spk_jump_to": "Jumped to position {time}.",
+        "spk_bookmark_deleted": "Bookmark deleted successfully.",
+        "spk_bookmark_added": "Bookmark saved at {time}.",
+        "spk_speed_set": "Speed {speed}x.",
+
+        # Settings Dialog
+        "settings_title": "Settings & Preferences",
+        "settings_general_box": "General & Language",
+        "settings_lang_label": "Interface Language:",
+        "settings_lang_tip": "Choose UI and screen reader language.",
+        "settings_mode_label": "Application Display Mode:",
+        "settings_mode_tip": "Choose Standard Mode for a simple clean player, or Advanced Mode for full streamer tools.",
+        "settings_mode_opt_standard": "Standard (Simple Audio Player)",
+        "settings_mode_opt_advanced": "Advanced (Full Streamer Features)",
+        "settings_resume": "Resume last folder on startup",
+        "settings_resume_tip": "Loads files from the last opened folder when application starts.",
+        "settings_remember_pos": "Remember window position and size",
+        "settings_remember_pos_tip": "Preserves window location and dimension across sessions.",
+        "settings_playback_box": "Playback & Navigation",
+        "settings_autoplay": "Autoplay next track automatically",
+        "settings_autoplay_tip": "Automatically advances to the next track when current playback ends.",
+        "settings_vol_step": "Volume Step (%):",
+        "settings_vol_step_tip": "Volume change amount per shortcut press (1 to 25 percent).",
+        "settings_seek_step": "Seek Step (seconds):",
+        "settings_seek_step_tip": "Playback jump amount for arrow navigation (1 to 60 seconds).",
+        "settings_vol_max": "Maximum Volume Limit (%):",
+        "settings_vol_max_tip": "Slider upper limit (100% normal or 150% volume boost).",
+        "settings_audio_box": "Audio & Equalizer",
+        "settings_eq_label": "Default Equalizer Profile:",
+        "settings_eq_tip": "Choose initial equalizer profile when application launches.",
+        "settings_norm": "Enable automatic volume normalization",
+        "settings_norm_tip": "Dynamically balances volume so quiet and loud tracks sound consistent.",
+        "settings_mono": "Enable mono audio downmix",
+        "settings_mono_tip": "Combines stereo channels to mono for single-ear streaming monitor.",
+        "settings_fade_next": "Fade out before playing next track",
+        "settings_fade_next_tip": "Smoothly lowers volume before loading the next track.",
+        "settings_fade_pause": "Fade out when pausing track",
+        "settings_fade_pause_tip": "Smoothly lowers volume on pause and fades back in on resume.",
+        "settings_fade_dur": "Fading Duration (seconds):",
+        "settings_fade_dur_tip": "Transition time for volume fading (0.1 to 10 seconds).",
+        "settings_acc_box": "Accessibility & Screen Reader",
+        "settings_verbosity_label": "NVDA Speech Verbosity Level:",
+        "settings_verbosity_tip": "Verbose for all details, Minimal for important notices only, or Silent for mute.",
+        "settings_verb_verbose": "Verbose - Announce all actions and changes",
+        "settings_verb_minimal": "Minimal - Announce important actions only",
+        "settings_verb_silent": "Silent - Disable automatic speech feedback",
+        "settings_cues": "Play sound cue at list top or bottom boundaries",
+        "settings_cues_tip": "Plays subtle audio earcons when reaching the first or last item in the file list.",
+        "settings_tools_box": "Streaming Tools & Sleep Timer",
+        "settings_sleep_label": "Sleep Timer Duration:",
+        "settings_sleep_tip": "Automatically stops playback after designated duration elapsed.",
+        "settings_obs": "Export currently playing title for OBS (now_playing.txt)",
+        "settings_obs_tip": "Automatically writes active song title to now_playing.txt for OBS Studio.",
+        "btn_save_apply": "Save & Apply",
+        "btn_cancel": "Cancel",
+
+        # Metadata Dialog
+        "meta_title": "Audio Technical Metadata",
+        "meta_file_name": "File Name: {val}",
+        "meta_file_loc": "Location: {val}",
+        "meta_file_size": "File Size: {val}",
+        "meta_file_format": "File Format: {val}",
+        "meta_duration": "Duration: {val}",
+        "meta_codec": "Audio Codec: {val}",
+        "meta_samplerate": "Sample Rate: {val} Hz",
+        "meta_channels": "Audio Channels: {val}",
+        "meta_title_tag": "Title: {val}",
+        "meta_artist_tag": "Artist: {val}",
+        "meta_album_tag": "Album: {val}",
+        "btn_copy_info": "Copy Info to Clipboard",
+        "btn_close": "Close",
+
+        # Bookmarks Dialog
+        "bm_title": "Time Bookmarks Manager",
+        "bm_list_label": "Bookmarks List:",
+        "bm_col_num": "No",
+        "bm_col_time": "Time Position",
+        "bm_col_label": "Note / Label",
+        "btn_bm_add": "Add Current Position",
+        "btn_bm_add_tip": "Save current playback timestamp as bookmark",
+        "btn_bm_jump": "Jump to Position",
+        "btn_bm_jump_tip": "Move playback to selected bookmark",
+        "btn_bm_del": "Delete",
+        "btn_bm_del_tip": "Delete selected bookmark from list",
+        "btn_bm_clear": "Clear All",
+        "btn_bm_clear_tip": "Remove all bookmarks for this audio file",
+        "bm_prompt_title": "Add Audio Bookmark",
+        "bm_prompt_desc": "Enter a note for the bookmark at position {time}:",
+        "bm_confirm_clear_title": "Confirm Clear All Bookmarks",
+        "bm_confirm_clear_msg": "Are you sure you want to remove all bookmarks for this file?",
+
+        # Sleep Timer Dialog
+        "sleep_title": "Sleep Timer",
+        "sleep_desc": "Duration Option:",
+        "sleep_choice_tip": "Select duration before audio automatically stops",
+        "sleep_custom_label": "Custom duration (minutes):",
+        "sleep_custom_tip": "Enter duration in minutes for custom option",
+        "sleep_status_active": "Timer status: Active, remaining time {time}",
+        "sleep_status_idle": "Timer status: Inactive",
+        "sleep_opt_off": "Off (Disabled)",
+        "sleep_opt_15": "15 Minutes",
+        "sleep_opt_30": "30 Minutes",
+        "sleep_opt_45": "45 Minutes",
+        "sleep_opt_60": "60 Minutes",
+        "sleep_opt_custom": "Custom",
+        "btn_sleep_start": "Start Timer",
+        "btn_sleep_cancel": "Cancel Timer",
+        "spk_sleep_started": "Sleep timer set for {mins} minutes.",
+        "spk_sleep_cancelled": "Sleep timer cancelled.",
+        "spk_sleep_done": "Sleep timer completed. Playback stopped.",
+
+        # Additional Speech Alerts
+        "spk_meta_opened": "Audio metadata for {name} opened.",
+        "spk_meta_copied": "Metadata copied to clipboard.",
+        "spk_bm_opened": "Bookmarks dialog opened. {count} marks available.",
+        "spk_bm_cleared": "All bookmarks for this file cleared.",
+        "spk_bm_none": "No bookmarks to delete.",
+        "spk_bm_select_first": "Select a bookmark first.",
+        "spk_bm_no_active_file": "No audio file currently selected or playing.",
+        "spk_obs_opened": "Opening now_playing.txt",
+        "spk_obs_missing": "File now_playing.txt not yet created.",
+        "spk_obs_enabled": "OBS export enabled.",
+        "spk_obs_disabled": "OBS export disabled.",
+        "spk_explorer_opened": "Opening File Explorer.",
+        "spk_explorer_failed": "Failed to open explorer: {err}",
+        "spk_clip_failed": "Failed to access clipboard.",
+        "spk_clip_success": "File path copied successfully.",
+        "spk_path_not_found": "Path not found.",
+        "spk_no_path_selected": "No path selected.",
+        "spk_first_track_reached": "Top of playlist reached.",
+        "spk_last_track_reached": "End of playlist reached.",
+        "spk_empty_list": "Playlist is empty.",
+        "spk_no_audio_files": "No audio files in list.",
+        "spk_time_remaining": "Displaying remaining time.",
+        "spk_time_elapsed": "Displaying elapsed time.",
+        "spk_pitch_not_supported": "Pitch control requires additional audio filters.",
+        "spk_audio_ducked": "Audio ducked.",
+        "spk_audio_normal": "Audio normal.",
+        "spk_eq_set": "Equalizer set to {preset}.",
+        "spk_norm_on": "Audio normalization enabled.",
+        "spk_norm_off": "Audio normalization disabled.",
+        "spk_mono_on": "Mono audio enabled.",
+        "spk_mono_off": "Stereo audio enabled.",
+
+        # About Dialog
+        "about_title": "About Streamer App",
+        "about_body": "Streamer App version 2.0\n\nAccessible audio and media player for screen reader users and streamers.\nFeatures Standard Mode, Advanced Mode, sleep timer, and instant live language switching.",
+    }
+}
+
+
+def init_language(config=None):
+    """Initializes the active language from config or defaults to 'id'."""
+    global _current_lang
+    if config is None:
+        config = utils.load_config()
+    lang = config.get("language", "id")
+    if lang in ("id", "en"):
+        _current_lang = lang
+    else:
+        _current_lang = "id"
+    return _current_lang
+
+
+def get_language():
+    """Returns the current language code ('id' or 'en')."""
+    return _current_lang
+
+
+def set_language(lang, persist=True):
+    """
+    Sets the active language code ('id' or 'en') and notifies all registered listeners.
+    If persist=True, writes the choice to config.json.
+    """
+    global _current_lang
+    if lang not in ("id", "en"):
+        return False
+    
+    _current_lang = lang
+    if persist:
+        utils.save_setting("language", lang)
+    
+    # Notify listeners
+    for callback in list(_listeners):
+        try:
+            callback(_current_lang)
+        except Exception as e:
+            print(f"Error in language change listener: {e}")
+    
+    return True
+
+
+def register_listener(callback):
+    """Registers a callback function to be invoked when language changes."""
+    if callback not in _listeners:
+        _listeners.append(callback)
+
+
+def unregister_listener(callback):
+    """Unregisters a previously registered language change callback."""
+    if callback in _listeners:
+        _listeners.remove(callback)
+
+
+def t(key, **kwargs):
+    """
+    Retrieves the translated string for key in current language.
+    Falls back to 'id' if not found in current language, or the key itself.
+    Formats with kwargs if provided.
+    """
+    lang_dict = TRANSLATIONS.get(_current_lang, TRANSLATIONS["id"])
+    text = lang_dict.get(key)
+    if text is None:
+        text = TRANSLATIONS["id"].get(key, key)
+    
+    if kwargs:
+        try:
+            return text.format(**kwargs)
+        except Exception:
+            return text
+    return text

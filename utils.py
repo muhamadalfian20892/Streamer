@@ -29,6 +29,7 @@ DEFAULT_CONFIG = {
     "obs_export": False,
     "favorites": [],
     "soundboard": {},
+    "language": "id",
     "first_time_setup": True
 }
 
@@ -83,6 +84,10 @@ def save_audio_device(device_name):
 def save_muted(muted):
     """Saves muted state into config.json."""
     return save_setting("muted", bool(muted))
+
+def save_language(lang):
+    """Saves interface language choice into config.json."""
+    return save_setting("language", str(lang).lower())
 
 def add_recent_folder(config, path):
     """Adds a path to recent folders list, keeping it unique and limited to 10."""
