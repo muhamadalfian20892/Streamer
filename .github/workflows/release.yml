@@ -1,0 +1,52 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable with PyInstaller
+        run: |
+          pyinstaller Streamer.spec --noconfirm
+          Copy-Item "config.json" -Destination "dist\Streamer\"
+          Copy-Item "readme.txt" -Destination "dist\Streamer\"
+          Copy-Item "readme_en.txt" -Destination "dist\Streamer\"
+          Copy-Item "version.json" -Destination "dist\Streamer\"
+          Compress-Archive -Path "dist\Streamer\*" -DestinationPath "Streamer-${{ github.ref_name }}-win64.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Streamer ${{ github.ref_name }}
+          files: Streamer-${{ github.ref_name }}-win64.zip
+          draft: false
+          prerelease: false
+          body: |
+            Streamer App ${{ github.ref_name }}
+
+            Pemutar audio dan media aksesibel untuk pengguna pembaca layar dan kreator streaming.
+            Accessible audio and media player for screen reader users and streamers.
+
+            ### Unduhan / Download
+            - Streamer-${{ github.ref_name }}-win64.zip: Paket mandiri Windows 64-bit siap pakai.
