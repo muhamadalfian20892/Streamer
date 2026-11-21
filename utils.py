@@ -30,6 +30,7 @@ DEFAULT_CONFIG = {
     "favorites": [],
     "soundboard": {},
     "language": "id",
+    "check_updates_on_startup": False,
     "first_time_setup": True
 }
 

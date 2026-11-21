@@ -11,6 +11,7 @@ import settings
 import fading
 from stream_features import StreamFeatures
 import readme
+import updater
 
 
 class MediaDropTarget(wx.FileDropTarget):
@@ -291,6 +292,8 @@ class StreamerFrame(wx.Frame):
         # Check for first time setup
         if self.config.get("first_time_setup", True):
             wx.CallAfter(readme.show_getting_started_wizard, self, self.config)
+        elif self.config.get("check_updates_on_startup", False):
+            wx.CallAfter(updater.check_for_updates_silent, self)
 
     def speak(self, text):
         """Wrapper for accessibility.speak that respects the verbose setting."""
@@ -651,6 +654,7 @@ class StreamerFrame(wx.Frame):
         self.item_guide = self.help_menu.Append(wx.ID_HELP, i18n.t("menu_guide"), i18n.t("menu_guide_help"))
         self.item_wizard = self.help_menu.Append(wx.ID_ANY, i18n.t("menu_wizard"), i18n.t("menu_wizard_help"))
         self.help_menu.AppendSeparator()
+        self.item_check_updates = self.help_menu.Append(wx.ID_ANY, i18n.t("menu_check_updates"), i18n.t("menu_check_updates_help"))
         self.item_about = self.help_menu.Append(wx.ID_ABOUT, i18n.t("menu_about"), i18n.t("menu_about_help"))
         self.menu_bar.Append(self.help_menu, i18n.t("menu_help"))
 
@@ -702,6 +706,7 @@ class StreamerFrame(wx.Frame):
 
         self.Bind(wx.EVT_MENU, lambda e: readme.show_readme_dialog(self), self.item_guide)
         self.Bind(wx.EVT_MENU, lambda e: readme.show_getting_started_wizard(self, self.config), self.item_wizard)
+        self.Bind(wx.EVT_MENU, lambda e: updater.check_for_updates_interactive(self), self.item_check_updates)
         self.Bind(wx.EVT_MENU, self.on_about, self.item_about)
 
     def init_drag_and_drop(self):
@@ -830,6 +835,9 @@ class StreamerFrame(wx.Frame):
             self.item_guide.SetHelp(i18n.t("menu_guide_help"))
             self.item_wizard.SetItemLabel(i18n.t("menu_wizard"))
             self.item_wizard.SetHelp(i18n.t("menu_wizard_help"))
+            if hasattr(self, 'item_check_updates'):
+                self.item_check_updates.SetItemLabel(i18n.t("menu_check_updates"))
+                self.item_check_updates.SetHelp(i18n.t("menu_check_updates_help"))
             self.item_about.SetItemLabel(i18n.t("menu_about"))
             self.item_about.SetHelp(i18n.t("menu_about_help"))
 

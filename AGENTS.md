@@ -4,16 +4,13 @@ This file is read by AI coding agents (Claude Code, Codex, GitHub Copilot, Curso
 
 ## About this project
 
-<!-- Replace with: what the project does, who uses it, and its main language and framework. -->
+Streamer App is an accessible audio and media player for Windows designed for screen reader users and streamers, built with wxPython and libmpv. It features full bilingual support (Indonesian and English) with live switching, persistent settings, OBS integration, and an in-app updater.
 
 ## Commands
 
-<!-- Replace with this project's real commands. These are the defaults that CI (.github/workflows/ci.yml) runs. -->
-
-- Python: `pip install -r requirements.txt`, then `pytest`. CI also runs `python -m compileall -q .`.
-- Node.js: `npm ci`, then `npm run lint`, `npm run build` and `npm test`.
-
-Run the tests before committing, and add a test when you fix a bug.
+- Install dependencies: `pip install -r requirements.txt`
+- Run application: `python Streamer.py`
+- Compile check: `python -m compileall -q .`
 
 ## Rules
 

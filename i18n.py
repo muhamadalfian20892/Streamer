@@ -121,6 +121,8 @@ TRANSLATIONS = {
         "menu_guide_help": "Buka panduan lengkap aplikasi",
         "menu_wizard": "&Wizard Mulai Cepat...",
         "menu_wizard_help": "Tampilkan panduan untuk pengguna baru",
+        "menu_check_updates": "&Periksa Pembaruan...",
+        "menu_check_updates_help": "Periksa ketersediaan versi terbaru aplikasi",
         "menu_about": "&Tentang Streamer App",
         "menu_about_help": "Informasi versi dan pembuat aplikasi",
 
@@ -417,9 +419,25 @@ TRANSLATIONS = {
         "spk_mono_on": "Audio mono diaktifkan.",
         "spk_mono_off": "Audio stereo diaktifkan.",
 
+        # Updater
+        "updater_title": "Pembaruan Aplikasi",
+        "updater_checking": "Memeriksa pembaruan aplikasi...",
+        "updater_up_to_date": "Aplikasi sudah dalam versi terbaru (versi {ver}).",
+        "updater_available_title": "Pembaruan Tersedia",
+        "updater_available_msg": "Versi terbaru {new_ver} telah tersedia.\n\nCatatan rilis:\n{notes}\n\nApakah Anda ingin mengunduh pembaruan sekarang?",
+        "updater_downloading": "Mengunduh pembaruan...",
+        "updater_downloading_progress": "Mengunduh: {pct}% ({dl_mb:.1f} MB dari {total_mb:.1f} MB)",
+        "updater_downloading_unknown": "Mengunduh: {dl_mb:.1f} MB",
+        "updater_complete_title": "Pembaruan Selesai",
+        "updater_complete_msg": "Berkas pembaruan berhasil diunduh ke:\n{path}\n\nApakah Anda ingin membuka folder tersebut?",
+        "updater_failed": "Pembaruan gagal diunduh. Silakan coba lagi nanti.",
+        "updater_error": "Tidak dapat memeriksa pembaruan saat ini. Pastikan koneksi internet aktif dan coba kembali.",
+        "settings_check_updates_startup": "Periksa pembaruan secara otomatis saat aplikasi dimulai",
+        "settings_check_updates_startup_tip": "Memeriksa pembaruan versi baru secara berkala di latar belakang saat aplikasi dijalankan.",
+
         # About Dialog
         "about_title": "Tentang Streamer App",
-        "about_body": "Streamer App versi 2.0\n\nPemutar audio dan media aksesibel untuk pengguna pembaca layar dan kreator streaming.\nDilengkapi dukungan Mode Standar, Mode Lanjutan, pengatur waktu tidur, dan pergantian bahasa instan.",
+        "about_body": "Streamer App versi 2.1\n\nPemutar audio dan media aksesibel untuk pengguna pembaca layar dan kreator streaming.\nDilengkapi dukungan Mode Standar, Mode Lanjutan, pengatur waktu tidur, pergantian bahasa instan, dan pembaruan aplikasi.",
     },
 
     "en": {
@@ -531,6 +549,8 @@ TRANSLATIONS = {
         "menu_guide_help": "Open complete user guide",
         "menu_wizard": "&Quick Start Wizard...",
         "menu_wizard_help": "Show getting started guide for new users",
+        "menu_check_updates": "Check for &Updates...",
+        "menu_check_updates_help": "Check if a newer version of the application is available",
         "menu_about": "&About Streamer App",
         "menu_about_help": "Application version and credits information",
 
@@ -827,9 +847,25 @@ TRANSLATIONS = {
         "spk_mono_on": "Mono audio enabled.",
         "spk_mono_off": "Stereo audio enabled.",
 
+        # Updater
+        "updater_title": "Application Updates",
+        "updater_checking": "Checking for application updates...",
+        "updater_up_to_date": "You are already using the latest version (version {ver}).",
+        "updater_available_title": "Update Available",
+        "updater_available_msg": "A new version {new_ver} is available.\n\nRelease notes:\n{notes}\n\nWould you like to download the update now?",
+        "updater_downloading": "Downloading update...",
+        "updater_downloading_progress": "Downloading: {pct}% ({dl_mb:.1f} MB of {total_mb:.1f} MB)",
+        "updater_downloading_unknown": "Downloading: {dl_mb:.1f} MB",
+        "updater_complete_title": "Update Downloaded",
+        "updater_complete_msg": "The update file was successfully downloaded to:\n{path}\n\nWould you like to open this folder?",
+        "updater_failed": "Failed to download update. Please try again later.",
+        "updater_error": "Unable to check for updates right now. Please check your internet connection and try again.",
+        "settings_check_updates_startup": "Check for updates automatically on startup",
+        "settings_check_updates_startup_tip": "Check for new versions in the background when the application starts.",
+
         # About Dialog
         "about_title": "About Streamer App",
-        "about_body": "Streamer App version 2.0\n\nAccessible audio and media player for screen reader users and streamers.\nFeatures Standard Mode, Advanced Mode, sleep timer, and instant live language switching.",
+        "about_body": "Streamer App version 2.1\n\nAccessible audio and media player for screen reader users and streamers.\nFeatures Standard Mode, Advanced Mode, sleep timer, instant live language switching, and application updates.",
     }
 }
 

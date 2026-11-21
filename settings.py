@@ -100,6 +100,17 @@ class SettingsDialog(wx.Dialog):
         self.chk_remember_pos.SetValue(bool(self.config.get("remember_window_pos", True)))
         gen_sizer.Add(self.chk_remember_pos, 0, wx.ALL, 6)
 
+        # Automatic update check on startup
+        self.chk_check_updates = wx.CheckBox(
+            scroll_win,
+            label=i18n.t("settings_check_updates_startup"),
+            name=i18n.t("settings_check_updates_startup")
+        )
+        self.chk_check_updates.SetName(i18n.t("settings_check_updates_startup"))
+        self.chk_check_updates.SetToolTip(i18n.t("settings_check_updates_startup_tip"))
+        self.chk_check_updates.SetValue(bool(self.config.get("check_updates_on_startup", False)))
+        gen_sizer.Add(self.chk_check_updates, 0, wx.ALL, 6)
+
         content_sizer.Add(gen_sizer, 0, wx.EXPAND | wx.ALL, 8)
 
         # =========================================================================
@@ -398,6 +409,7 @@ class SettingsDialog(wx.Dialog):
         self.choice_app_mode.Bind(wx.EVT_CHOICE, self.on_change)
         self.chk_resume.Bind(wx.EVT_CHECKBOX, self.on_change)
         self.chk_remember_pos.Bind(wx.EVT_CHECKBOX, self.on_change)
+        self.chk_check_updates.Bind(wx.EVT_CHECKBOX, self.on_change)
 
         self.chk_autoplay.Bind(wx.EVT_CHECKBOX, self.on_change)
         self.spin_vol_step.Bind(wx.EVT_SPINCTRL, self.on_change)
@@ -456,6 +468,9 @@ class SettingsDialog(wx.Dialog):
         self.chk_resume.SetToolTip(i18n.t("settings_resume_tip"))
         self.chk_remember_pos.SetLabel(i18n.t("settings_remember_pos"))
         self.chk_remember_pos.SetToolTip(i18n.t("settings_remember_pos_tip"))
+        if hasattr(self, 'chk_check_updates'):
+            self.chk_check_updates.SetLabel(i18n.t("settings_check_updates_startup"))
+            self.chk_check_updates.SetToolTip(i18n.t("settings_check_updates_startup_tip"))
 
         self.pb_box.SetLabel(i18n.t("settings_playback_box"))
         self.chk_autoplay.SetLabel(i18n.t("settings_autoplay"))
@@ -530,6 +545,8 @@ class SettingsDialog(wx.Dialog):
         self.config["app_mode"] = "advanced" if self.choice_app_mode.GetSelection() == 1 else "standard"
         self.config["resume_folder"] = self.chk_resume.GetValue()
         self.config["remember_window_pos"] = self.chk_remember_pos.GetValue()
+        if hasattr(self, 'chk_check_updates'):
+            self.config["check_updates_on_startup"] = self.chk_check_updates.GetValue()
 
         # 2. Playback & Navigation
         self.config["autoplay"] = self.chk_autoplay.GetValue()
