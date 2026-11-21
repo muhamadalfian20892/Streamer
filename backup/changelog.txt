@@ -1,0 +1,19 @@
+
+baru pada 10/06/2026:
+
+ada Settings Panel baru (bisa dibuka lewat Ctrl+P). Di sini kalian bisa bebas kustomisasi banyak hal. Mulai dari ngatur seberapa besar lompatan volume dan durasi lagu, sampai opsi buat nginget folder terakhir pas aplikasi baru dibuka. Dan yang paling keren, aplikasinya bakal otomatis nge-save dan nerapin settingan detik itu juga pas kalian ubah, tanpa perlu repot-repot restart!
+
+Bagian Aksesibilitas buat pengguna NVDA juga udah aku upgrade. Semua nama folder sekarang bersih dari tanda kurung siku `[]`, tapi tetep kebaca sebagai folder. Aku nambahin sistem embed label ke elemen UI-nya biar NVDA ngebaca semuanya jauh lebih jelas. Terus, aplikasinya sekarang bakal otomatis ngasih tau kalau kalian ganti volume atau nyepetin lagu. Kalau kalian lagi nggak pengen diganggu sama pengumuman ini, langsung aja matiin opsi "NVDA Verbose" dari Settings!
+
+Yang nggak kalah keren, aku nambahin sistem Audio Fading! Kalau kalian lagi muter lagu terus milih lagu baru, suaranya bakal fade out dulu sebelum lagunya ganti, jadi nggak ngagetin. Sistem fading ini juga jalan pas kalian tekan tombol Pause dan Play. Waktu di-pause, suaranya bakal fade out sampai habis, dan waktu di-play lagi, suaranya bakal fade in pelan-pelan naik persis ke volume aslinya. Durasi fading-nya juga bisa kalian atur sebebasnya di Settings. Oh ya, aku juga udah ngeberesin bug kritis yang bikin MPV suka stuck di memori waktu aplikasinya ditutup. Pokoknya update kali ini bener-bener mulus!
+
+================================================================================
+
+baru pada 06/10/2026: update tekhnis
+- Fix: Error pemotongan nama folder yang memiliki karakter kurung siku `[]` di dalamnya.
+- Fix: Mencegah file yang kebetulan diawali karakter `[` dibaca sebagai direktori folder.
+- Fix: Mengatasi infinite loop dan reload berulang saat menekan tombol Backspace di root directory (misal `C:\`).
+- Fix: Tombol Play/Pause sekarang otomatis memutar file yang dipilih jika sebelumnya tidak ada lagu yang sedang dimainkan.
+- Fix: Crash pada aplikasi jika mencoba melakukan Loop sebelum MPV (audio engine) termuat dengan sempurna.
+- Fix: Crash pada Dropdown Audio Device apabila daftar device dari sistem tidak ditemukan atau kosong.
+- Fix: Crash saat user mengganti Audio Device di saat player gagal termuat.
