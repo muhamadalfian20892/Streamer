@@ -19,7 +19,7 @@ import i18n
 import accessibility
 import utils
 
-CURRENT_VERSION = "2.1.0"
+CURRENT_VERSION = "2.2.0"
 
 # Target repository details kept internal to backend logic
 _REPO_OWNER = "muhamadalfian20892"
@@ -27,7 +27,7 @@ _REPO_NAME = "Streamer"
 _RELEASES_API_URL = f"https://api.github.com/repos/{_REPO_OWNER}/{_REPO_NAME}/releases/latest"
 _RAW_VERSION_URL = f"https://raw.githubusercontent.com/{_REPO_OWNER}/{_REPO_NAME}/main/version.json"
 _DEFAULT_ARCHIVE_URL = f"https://github.com/{_REPO_OWNER}/{_REPO_NAME}/archive/refs/heads/main.zip"
-_USER_AGENT = "StreamerApp/2.1 (Windows NT)"
+_USER_AGENT = "StreamerApp/2.2 (Windows NT)"
 
 
 def parse_version(ver_str):

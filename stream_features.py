@@ -493,6 +493,8 @@ class SleepTimer:
             accessibility.speak(i18n.t("spk_sleep_done"), level="minimal")
 
         if fade_enabled and fade_duration > 0 and hasattr(self.frame, 'fader') and self.frame.fader:
+            if hasattr(self.frame, 'invalidate_volume_fade'):
+                self.frame.invalidate_volume_fade()
             current_vol = self.frame.vol_slider.GetValue() if hasattr(self.frame, 'vol_slider') else 100
             self.frame.fader.fade_out_and_pause(fade_duration, current_vol, on_complete=stop_playback)
         else:
@@ -695,6 +697,9 @@ class StreamFeatures:
         if not self.frame.fader:
             import fading
             self.frame.fader = fading.AudioFader(self.player)
+
+        if hasattr(self.frame, 'invalidate_volume_fade'):
+            self.frame.invalidate_volume_fade()
             
         if self.is_ducked:
             self.is_ducked = False

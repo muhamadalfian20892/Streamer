@@ -1,6 +1,13 @@
 Catatan Perubahan (Changelog)
 
 ================================================================================
+v2.2.0 (26/11/2026):
+- Fitur Baru: Kotak edit input volume manual di sebelah slider volume. Ketik angka volume target lalu tekan Enter untuk mengubah volume secara halus mengikuti durasi fading pada Pengaturan.
+- Aksesibilitas: Menyelaraskan pelaporan nilai slider volume di pembaca layar (MSAA) agar sama persis dengan nilai volume asli (0-150%) dan kotak edit manual.
+- Perilaku Fokus: Perpindahan fokus dengan Tab, Shift+Tab, atau klik kontrol lain tidak lagi memicu perubahan volume secara otomatis; perubahan hanya dipicu saat menekan Enter (Escape untuk membatalkan ketikan).
+- Perbaikan Fading: Transisi volume pada AudioFader kini menggunakan progres waktu aktual agar durasi fade lebih presisi serta aman terhadap pembatalan atau interupsi di tengah jalan.
+
+================================================================================
 Baru pada 11/06/2026:
 Pembaruan besar ini membawa lebih dari 40 peningkatan, penambahan fitur pemutar musik, penyempurnaan aksesibilitas pembaca layar, dan penguatan stabilitas sistem:
 

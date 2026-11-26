@@ -1,7 +1,7 @@
 {
-  "version": "2.1.0",
-  "release_notes_id": "Dukungan multi-bahasa langsung tanpa restart, penstabil audio dan volume persisten, serta modul pembaruan aplikasi.",
-  "release_notes_en": "Live bilingual language switching without restart, audio stabilizer and persistent volume, and in-app update module.",
-  "download_url": "https://github.com/muhamadalfian20892/Streamer/archive/refs/heads/main.zip",
-  "published_at": "2026-11-21"
+  "version": "2.2.0",
+  "release_notes_id": "Penambahan kotak edit input volume manual di sebelah slider dengan efek fading bertahap, sinkronisasi pembaca layar untuk slider dan kotak edit volume, serta penyempurnaan akurasi transisi fading.",
+  "release_notes_en": "Added a manual volume edit field next to the volume slider with smooth fading transitions, aligned screen reader values between the slider and edit field, and improved fading transition timing accuracy.",
+  "download_url": "https://github.com/muhamadalfian20892/Streamer/releases/download/v2.2.0/Streamer-v2.2.0-win64.zip",
+  "published_at": "2026-11-26"
 }

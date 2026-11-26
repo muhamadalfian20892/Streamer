@@ -31,7 +31,7 @@ Untuk pengguna pembaca layar maupun pengguna visual, tata letak aplikasi disusun
 - Bagian Bawah (Indikator dan Kontrol Pemutaran):
   * Teks indikator durasi yang menampilkan waktu berjalan dan total durasi lagu.
   * Penggeser posisi lagu (Seek slider) untuk melompat ke detik tertentu.
-  * Penggeser volume audio dengan batas hingga 150%.
+  * Penggeser volume audio dengan batas hingga 150% beserta kotak edit input volume manual di sebelahnya (perubahan volume lewat kotak edit mengikuti durasi fading).
   * Baris tombol kendali: Mundur, Putar/Jeda, Berhenti, Maju, Trek Sebelumnya, Trek Berikutnya, Ulangi (Loop), Acak (Shuffle), dan Bisukan (Mute).
   * Menu pilihan Audio Device untuk memilih kartu suara atau perangkat keluaran audio yang aktif.
 
@@ -52,7 +52,7 @@ b. Kendali Pemutaran Musik
 - Stop: Menghentikan pemutaran lagu dan mengembalikan posisi ke awal.
 - Loop: Tekan Ctrl+L untuk mengulang lagu yang sama terus-menerus. Pembaca layar akan mengumumkan "Loop Hidup" atau "Loop Mati".
 - Shuffle: Memutar lagu dalam daftar secara acak.
-- Pengaturan Volume: Tekan Ctrl+Panah Atas untuk menaikkan volume, dan Ctrl+Panah Bawah untuk menurunkannya. Anda juga dapat menggunakan slider volume.
+- Pengaturan Volume: Tekan Ctrl+Panah Atas untuk menaikkan volume, dan Ctrl+Panah Bawah untuk menurunkannya. Anda juga dapat menggunakan slider volume atau mengetik angka volume langsung pada kotak edit di sebelah slider lalu tekan Enter agar volume berubah halus mengikuti durasi fading.
 - Lompat Durasi: Tekan Ctrl+Panah Kiri untuk melompat mundur beberapa detik, dan Ctrl+Panah Kanan untuk melompat maju.
 
 c. Pengaturan Audio dan Equalizer (Ctrl+P)

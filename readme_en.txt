@@ -31,7 +31,7 @@ For both visual and screen reader users, the layout is organized logically from 
 - Bottom Section (Playback Controls):
   * Playback time button showing elapsed and total time (click to toggle remaining time).
   * Seek slider for jumping to specific track timestamps.
-  * Audio volume slider (0 to 150%).
+  * Audio volume slider (0 to 150%) and an adjacent manual volume edit field (entering a value fades smoothly over the configured fading duration).
   * Playback buttons: Previous, Rewind 5s, Play/Pause, Stop, Forward 5s, Next, Mute, Loop, and Shuffle.
   * Audio Device dropdown to select the active output sound card or headphones.
 - Advanced Panel (Advanced Mode only): Stream Marker button, Bookmarks Manager, Audio Metadata Inspector, OBS export checkbox, Equalizer profile, Audio Normalization, and Mono Downmix.
@@ -53,7 +53,7 @@ b. Playback Controls
 - Stop: Press Ctrl+S or click Stop to halt playback and reset time to 00:00.
 - Loop: Press Ctrl+L to repeat the current track continuously.
 - Shuffle: Toggle randomized track playback order.
-- Volume: Press Ctrl+Up Arrow to raise volume, Ctrl+Down Arrow to lower volume.
+- Volume: Press Ctrl+Up Arrow to raise volume, Ctrl+Down Arrow to lower volume, adjust the volume slider, or type a target percentage in the volume edit field next to the slider and press Enter to fade smoothly over the fading duration.
 - Seek: Press Left Arrow / Right Arrow (or Ctrl+Left / Ctrl+Right) to jump backward or forward.
 - Mute: Press Ctrl+M to silence audio sound instantly.
 

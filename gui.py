@@ -1,6 +1,7 @@
 import wx
 import os
 import sys
+import math
 import random
 import subprocess
 import accessibility
@@ -12,6 +13,24 @@ import fading
 from stream_features import StreamFeatures
 import readme
 import updater
+
+
+class AccessibleControlName(wx.Accessible):
+    """Exposes a wx control's GetName() (and optionally numeric value) via MSAA."""
+    def __init__(self, win, expose_value=False):
+        super().__init__(win)
+        self._win = win
+        self._expose_value = expose_value
+
+    def GetName(self, childId):
+        if childId == wx.ACC_SELF and self._win:
+            return (wx.ACC_OK, self._win.GetName())
+        return (wx.ACC_NOT_IMPLEMENTED, "")
+
+    def GetValue(self, childId):
+        if self._expose_value and childId == wx.ACC_SELF and self._win:
+            return (wx.ACC_OK, str(self._win.GetValue()))
+        return (wx.ACC_NOT_IMPLEMENTED, "")
 
 
 class MediaDropTarget(wx.FileDropTarget):
@@ -249,6 +268,11 @@ class StreamerFrame(wx.Frame):
         self.show_remaining_time = False
         self.is_user_seeking = False
         self.pre_mute_vol = self.config.get("volume", 100) or 100
+        self._vol_edit_dirty = False
+        self._vol_fade_id = 0
+        self._is_volume_fading = False
+        self._current_fade_vol = None
+        self._closing = False
 
         self.init_ui()
         self.init_menu_bar()
@@ -301,6 +325,13 @@ class StreamerFrame(wx.Frame):
             accessibility.speak(text)
 
     def on_close(self, event):
+        self._closing = True
+        if self._is_volume_fading and hasattr(self, 'vol_slider'):
+            try:
+                utils.save_volume(self.vol_slider.GetValue())
+            except Exception:
+                pass
+        self.invalidate_volume_fade()
         i18n.unregister_listener(self.on_i18n_language_changed)
         if hasattr(self, 'stream_features'):
             self.stream_features.unregister_global_hotkeys()
@@ -482,9 +513,30 @@ class StreamerFrame(wx.Frame):
         self.vol_label.SetToolTip(i18n.t("label_volume_tip"))
 
         max_vol = self.config.get("volume_max", 150)
-        self.vol_slider = wx.Slider(panel, value=100, minValue=0, maxValue=max_vol, style=wx.SL_HORIZONTAL, name="Slider Volume Suara")
+        try:
+            init_vol = int(self.config.get("volume", 100))
+        except (ValueError, TypeError):
+            init_vol = 100
+        init_vol = max(0, min(max_vol, init_vol))
+
+        self.vol_slider = wx.Slider(panel, value=init_vol, minValue=0, maxValue=max_vol, style=wx.SL_HORIZONTAL, name="Slider Volume Suara")
         self.vol_slider.SetName("Slider Volume Suara")
+        self.vol_slider.SetAccessible(AccessibleControlName(self.vol_slider, expose_value=True))
         self.vol_slider.SetToolTip(i18n.t("slider_volume_tip"))
+
+        self.vol_edit = wx.TextCtrl(
+            panel,
+            value=str(init_vol),
+            size=self.FromDIP((55, -1)),
+            style=wx.TE_PROCESS_ENTER,
+            name=i18n.t("edit_volume_name")
+        )
+        self.vol_edit.SetName(i18n.t("edit_volume_name"))
+        self.vol_edit.SetAccessible(AccessibleControlName(self.vol_edit))
+        self.vol_edit.SetToolTip(i18n.t("edit_volume_tip", max_vol=max_vol))
+
+        self.vol_unit_label = wx.StaticText(panel, label="%", name="Persen Volume")
+        self.vol_unit_label.SetName("Persen Volume")
 
         self.dev_label = wx.StaticText(panel, label=i18n.t("label_device"), name="Label Perangkat Audio")
         self.dev_label.SetName("Label Perangkat Audio")
@@ -495,7 +547,9 @@ class StreamerFrame(wx.Frame):
         self.device_choice.SetToolTip(i18n.t("choice_device_tip"))
 
         vol_dev_sizer.Add(self.vol_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        vol_dev_sizer.Add(self.vol_slider, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 15)
+        vol_dev_sizer.Add(self.vol_slider, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
+        vol_dev_sizer.Add(self.vol_edit, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 3)
+        vol_dev_sizer.Add(self.vol_unit_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 15)
         vol_dev_sizer.Add(self.dev_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         vol_dev_sizer.Add(self.device_choice, 1, wx.ALIGN_CENTER_VERTICAL)
 
@@ -937,6 +991,10 @@ class StreamerFrame(wx.Frame):
         if hasattr(self, 'vol_slider'):
             self.vol_slider.SetName(i18n.t("slider_volume_name"))
             self.vol_slider.SetToolTip(i18n.t("slider_volume_tip"))
+        if hasattr(self, 'vol_edit'):
+            max_vol = self.config.get("volume_max", 150)
+            self.vol_edit.SetName(i18n.t("edit_volume_name"))
+            self.vol_edit.SetToolTip(i18n.t("edit_volume_tip", max_vol=max_vol))
         if hasattr(self, 'dev_label'):
             self.dev_label.SetLabel(i18n.t("label_device"))
             self.dev_label.SetName(i18n.t("label_device"))
@@ -1057,6 +1115,9 @@ class StreamerFrame(wx.Frame):
 
         # Volume and Device
         self.vol_slider.Bind(wx.EVT_SLIDER, self.on_volume_change)
+        self.vol_edit.Bind(wx.EVT_TEXT, self.on_vol_edit_text)
+        self.vol_edit.Bind(wx.EVT_TEXT_ENTER, self.on_vol_edit_enter)
+        self.vol_edit.Bind(wx.EVT_KEY_DOWN, self.on_vol_edit_key_down)
         self.device_choice.Bind(wx.EVT_CHOICE, self.on_device_change)
 
         # Advanced Streamer Controls
@@ -1082,6 +1143,9 @@ class StreamerFrame(wx.Frame):
         saved_vol = max(0, min(max_vol, saved_vol))
 
         self.vol_slider.SetValue(saved_vol)
+        if hasattr(self, 'vol_edit'):
+            self.vol_edit.ChangeValue(str(saved_vol))
+            self._vol_edit_dirty = False
         self.pre_mute_vol = saved_vol if saved_vol > 0 else 100
 
         if self.is_muted:
@@ -1249,6 +1313,17 @@ class StreamerFrame(wx.Frame):
             if dlg.ShowModal() == wx.ID_OK:
                 self.config = dlg.get_settings()
                 utils.save_config(self.config)
+                max_vol = int(self.config.get("volume_max", 150))
+                if hasattr(self, 'vol_slider'):
+                    self.vol_slider.SetMax(max_vol)
+                    if self.vol_slider.GetValue() > max_vol:
+                        self._cancel_volume_fade(sync_edit=False)
+                        if self.fader:
+                            self.fader.cancel()
+                        self.vol_slider.SetValue(max_vol)
+                        self.on_volume_change(None)
+                if hasattr(self, 'vol_edit'):
+                    self.vol_edit.SetToolTip(i18n.t("edit_volume_tip", max_vol=max_vol))
                 new_mode = self.config.get("app_mode", self.app_mode)
                 if new_mode != self.app_mode:
                     self.set_app_mode(new_mode)
@@ -1347,9 +1422,11 @@ class StreamerFrame(wx.Frame):
                     self.stream_features.export_now_playing(filename)
 
             if fade_enabled and self.player.is_playing() and fade_duration > 0:
+                self._cancel_volume_fade(sync_edit=True)
                 current_vol = self.vol_slider.GetValue()
                 self.fader.fade_and_play(full_path, fade_duration, current_vol, on_complete=on_started)
             else:
+                self._cancel_volume_fade(sync_edit=True)
                 if self.fader:
                     self.fader.cancel()
                 self.player.load(full_path)
@@ -1437,6 +1514,7 @@ class StreamerFrame(wx.Frame):
         """Stops playback and resets state."""
         if not self.player:
             return
+        self._cancel_volume_fade(sync_edit=True)
         if self.fader:
             self.fader.cancel()
         try:
@@ -1465,6 +1543,7 @@ class StreamerFrame(wx.Frame):
                 fade_duration = self.config.get("fade_duration", 0.5)
                 if not self.fader:
                     self.fader = fading.AudioFader(self.player)
+                self._cancel_volume_fade(sync_edit=True)
                 current_vol = self.vol_slider.GetValue()
 
                 def on_paused():
@@ -1479,6 +1558,7 @@ class StreamerFrame(wx.Frame):
                 fade_duration = self.config.get("fade_duration", 0.5)
                 if not self.fader:
                     self.fader = fading.AudioFader(self.player)
+                self._cancel_volume_fade(sync_edit=True)
                 current_vol = self.vol_slider.GetValue()
 
                 if self.fader:
@@ -1497,6 +1577,7 @@ class StreamerFrame(wx.Frame):
                 return
 
         # Regular toggle
+        self._cancel_volume_fade(sync_edit=True)
         if self.fader:
             self.fader.cancel()
 
@@ -1647,7 +1728,41 @@ class StreamerFrame(wx.Frame):
             except Exception:
                 pass
 
+    def invalidate_volume_fade(self):
+        """Marks any active manual-edit volume fade as superseded."""
+        self._vol_fade_id += 1
+        self._is_volume_fading = False
+        self._current_fade_vol = None
+
+    def _cancel_volume_fade(self, sync_edit=False):
+        """Invalidates active volume fade and optionally syncs the manual edit field."""
+        self.invalidate_volume_fade()
+        if sync_edit and hasattr(self, 'vol_edit') and self.vol_edit:
+            curr = self.vol_slider.GetValue()
+            self.vol_edit.ChangeValue(str(curr))
+            self._vol_edit_dirty = False
+
+    def _unmute_ui_and_player(self, reset_volume_zero=False):
+        """Clears mute state across UI controls, config, and player."""
+        if not self.is_muted:
+            return
+        self.is_muted = False
+        self.config["muted"] = False
+        utils.save_muted(False)
+        self.mute_toggle.SetValue(False)
+        self.mute_toggle.SetLabel(i18n.t("btn_mute"))
+        if hasattr(self, 'menu_toggle_mute'):
+            self.menu_toggle_mute.Check(False)
+        if self.player:
+            if reset_volume_zero:
+                self.player.set_volume(0, persist=False)
+            self.player.set_mute(False, persist=False)
+
     def change_volume(self, change):
+        if self._is_volume_fading and self.fader:
+            self.fader.cancel()
+        self.invalidate_volume_fade()
+
         current = self.vol_slider.GetValue()
         step = self.config.get("volume_step", 1)
         max_vol = self.config.get("volume_max", 150)
@@ -1657,22 +1772,160 @@ class StreamerFrame(wx.Frame):
         self.speak(i18n.t("spk_vol_level", val=new_val))
 
     def on_volume_change(self, event):
+        if event is not None:
+            if self._is_volume_fading and self.fader:
+                self.fader.cancel()
+            self.invalidate_volume_fade()
+
         val = self.vol_slider.GetValue()
         if self.is_muted and val > 0:
-            self.is_muted = False
-            self.config["muted"] = False
-            utils.save_muted(False)
-            self.mute_toggle.SetValue(False)
-            self.mute_toggle.SetLabel(i18n.t("btn_mute"))
-            if hasattr(self, 'menu_toggle_mute'):
-                self.menu_toggle_mute.Check(False)
+            self._unmute_ui_and_player()
 
         if self.player:
             self.player.set_volume(val, persist=True)
         else:
             utils.save_volume(val)
         self.config["volume"] = val
+        if val > 0:
+            self.pre_mute_vol = val
+        if hasattr(self, 'vol_edit') and self.vol_edit:
+            self.vol_edit.ChangeValue(str(val))
+            self._vol_edit_dirty = False
         self.update_status_bar()
+
+    def on_vol_edit_text(self, event):
+        self._vol_edit_dirty = True
+        event.Skip()
+
+    def on_vol_edit_enter(self, event):
+        self.commit_volume_from_edit()
+
+    def on_vol_edit_key_down(self, event):
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            curr = self.vol_slider.GetValue()
+            self.vol_edit.ChangeValue(str(curr))
+            self._vol_edit_dirty = False
+            self.speak(i18n.t("spk_vol_level", val=curr))
+            return
+        event.Skip()
+
+    def commit_volume_from_edit(self):
+        """Validates manual volume text input and fades volume to the target level."""
+        if not hasattr(self, 'vol_edit') or not self.vol_edit:
+            return
+
+        max_vol = int(self.config.get("volume_max", 150))
+        curr_vol = self.vol_slider.GetValue()
+        raw = self.vol_edit.GetValue().strip()
+        if raw.endswith("%"):
+            raw = raw[:-1].strip()
+
+        if not raw:
+            self.vol_edit.ChangeValue(str(curr_vol))
+            self._vol_edit_dirty = False
+            self.vol_edit.SelectAll()
+            self.speak(i18n.t("spk_vol_invalid", max_vol=max_vol))
+            return
+
+        try:
+            parsed = float(raw.replace(",", "."))
+            if not math.isfinite(parsed):
+                raise ValueError("Non-finite volume value")
+        except (ValueError, TypeError):
+            self.vol_edit.ChangeValue(str(curr_vol))
+            self._vol_edit_dirty = False
+            self.vol_edit.SelectAll()
+            self.speak(i18n.t("spk_vol_invalid", max_vol=max_vol))
+            return
+
+        if parsed < 0 or parsed > max_vol:
+            self.vol_edit.ChangeValue(str(curr_vol))
+            self._vol_edit_dirty = False
+            self.vol_edit.SelectAll()
+            self.speak(i18n.t("spk_vol_out_of_range", max_vol=max_vol))
+            return
+
+        target_vol = int(round(parsed))
+        self.vol_edit.ChangeValue(str(target_vol))
+        self._vol_edit_dirty = False
+        self.fade_volume_to(target_vol)
+
+    def fade_volume_to(self, target_vol):
+        """Smoothly transitions volume from current level to target_vol over fade_duration."""
+        max_vol = int(self.config.get("volume_max", 150))
+        target_vol = max(0, min(max_vol, int(target_vol)))
+
+        if self.is_muted and target_vol > 0:
+            start_vol = 0.0
+            self._unmute_ui_and_player(reset_volume_zero=True)
+            self.vol_slider.SetValue(0)
+            self.update_status_bar()
+        elif self._is_volume_fading and self._current_fade_vol is not None:
+            start_vol = float(self._current_fade_vol)
+        else:
+            start_vol = float(self.vol_slider.GetValue())
+
+        if start_vol == float(target_vol) and not self._is_volume_fading:
+            self.vol_slider.SetValue(target_vol)
+            if hasattr(self, 'vol_edit') and self.vol_edit:
+                self.vol_edit.ChangeValue(str(target_vol))
+            self.speak(i18n.t("spk_vol_already", val=target_vol))
+            return
+
+        try:
+            fade_duration = float(self.config.get("fade_duration", 0.5))
+        except (ValueError, TypeError):
+            fade_duration = 0.5
+
+        if fade_duration <= 0:
+            if self.fader:
+                self.fader.cancel()
+            self.invalidate_volume_fade()
+            self.vol_slider.SetValue(target_vol)
+            self.on_volume_change(None)
+            self.speak(i18n.t("spk_vol_level", val=target_vol))
+            return
+
+        if not self.fader:
+            self.fader = fading.AudioFader(self.player)
+
+        self._vol_fade_id += 1
+        fade_id = self._vol_fade_id
+        self._is_volume_fading = True
+        self._current_fade_vol = start_vol
+
+        def on_step(vol):
+            if fade_id != self._vol_fade_id or getattr(self, '_closing', False):
+                return
+            self._current_fade_vol = vol
+            if self.player:
+                self.player.set_volume(vol, persist=False)
+            rounded = int(round(vol))
+            if self.vol_slider.GetValue() != rounded:
+                self.vol_slider.SetValue(rounded)
+                self.config["volume"] = rounded
+                self.update_status_bar()
+
+        def on_complete():
+            if fade_id != self._vol_fade_id or getattr(self, '_closing', False):
+                return
+            self._is_volume_fading = False
+            self._current_fade_vol = None
+            self.vol_slider.SetValue(target_vol)
+            if self.player:
+                self.player.set_volume(target_vol, persist=True)
+            else:
+                utils.save_volume(target_vol)
+            self.config["volume"] = target_vol
+            if target_vol > 0:
+                self.pre_mute_vol = target_vol
+            if hasattr(self, 'vol_edit') and self.vol_edit and not self._vol_edit_dirty:
+                self.vol_edit.ChangeValue(str(target_vol))
+            self.update_status_bar()
+
+        self.fader.fade_volume(fade_duration, start_vol, float(target_vol), on_step=on_step, on_complete=on_complete)
+        dur_str = f"{fade_duration:g}"
+        self.speak(i18n.t("spk_vol_fading", val=target_vol, dur=dur_str))
 
     def refresh_audio_devices(self):
         if not self.player:

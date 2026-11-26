@@ -163,25 +163,42 @@ class AudioFader:
         self._start_thread(self._fade_volume_task, (duration, start_volume, target_volume, on_step, on_complete))
 
     def _fade_volume_task(self, cancel_token, duration, start_volume, target_volume, on_step, on_complete):
-        steps = int(duration * 20)
-        if steps < 1:
-            steps = 1
-        sleep_time = max(0.005, duration / steps)
-        vol_difference = float(target_volume - start_volume)
-        vol_step = vol_difference / steps
-        
-        curr_vol = float(start_volume)
-        for _ in range(steps):
-            if cancel_token.is_set():
+        duration = float(duration)
+        start_volume = float(start_volume)
+        target_volume = float(target_volume)
+
+        if duration <= 0 or start_volume == target_volume:
+            if not cancel_token.is_set():
+                if on_step:
+                    _safe_call_after(on_step, target_volume)
+                else:
+                    try:
+                        self.player.set_volume(target_volume, persist=False)
+                    except Exception:
+                        pass
+                if on_complete:
+                    _safe_call_after(on_complete)
+            return
+
+        step_interval = min(0.05, max(0.01, duration / 20.0))
+        start_time = time.monotonic()
+
+        while not cancel_token.is_set():
+            elapsed = time.monotonic() - start_time
+            remaining = duration - elapsed
+            if remaining <= 0:
+                break
+
+            wait_time = min(step_interval, remaining)
+            if cancel_token.wait(timeout=wait_time):
                 return
-            curr_vol += vol_step
-            if vol_difference > 0:
-                if curr_vol > target_volume:
-                    curr_vol = target_volume
-            else:
-                if curr_vol < target_volume:
-                    curr_vol = target_volume
-            
+
+            elapsed = time.monotonic() - start_time
+            progress = min(1.0, elapsed / duration)
+            if progress >= 1.0:
+                break
+
+            curr_vol = start_volume + (target_volume - start_volume) * progress
             if on_step:
                 _safe_call_after(on_step, curr_vol)
             else:
@@ -189,12 +206,10 @@ class AudioFader:
                     self.player.set_volume(curr_vol, persist=False)
                 except Exception:
                     pass
-            if cancel_token.wait(timeout=sleep_time):
-                return
-            
+
         if cancel_token.is_set():
             return
-            
+
         if on_step:
             _safe_call_after(on_step, target_volume)
         else:
@@ -202,7 +217,7 @@ class AudioFader:
                 self.player.set_volume(target_volume, persist=False)
             except Exception:
                 pass
-            
+
         if not cancel_token.is_set() and on_complete:
             _safe_call_after(on_complete)
 

@@ -198,6 +198,8 @@ TRANSLATIONS = {
         "label_volume_tip": "Label volume suara pemutar",
         "slider_volume_name": "Slider Volume Suara",
         "slider_volume_tip": "Atur tingkat volume suara (0 sampai 150%)",
+        "edit_volume_name": "Input Volume Manual (%)",
+        "edit_volume_tip": "Ketik nilai volume (0 sampai {max_vol}%) lalu tekan Enter untuk mengubah volume secara bertahap sesuai durasi fading",
         "label_device": "Perangkat Audio:",
         "label_device_tip": "Label perangkat output suara",
         "choice_device_name": "Pilihan Perangkat Audio",
@@ -264,6 +266,10 @@ TRANSLATIONS = {
         "spk_audio_muted": "Audio dibisukan.",
         "spk_audio_unmuted": "Audio diaktifkan kembali.",
         "spk_vol_level": "Volume {val} persen.",
+        "spk_vol_fading": "Mengubah volume ke {val} persen dalam {dur} detik.",
+        "spk_vol_already": "Volume sudah {val} persen.",
+        "spk_vol_invalid": "Input volume tidak valid. Masukkan angka antara 0 sampai {max_vol}.",
+        "spk_vol_out_of_range": "Nilai volume harus antara 0 sampai {max_vol} persen.",
         "spk_dev_set": "Perangkat audio diubah ke {name}.",
         "spk_dev_refreshed": "Daftar perangkat audio disegarkan. Ditemukan {count} perangkat.",
         "spk_marker_saved": "Penanda streaming disimpan.",
@@ -437,7 +443,7 @@ TRANSLATIONS = {
 
         # About Dialog
         "about_title": "Tentang Streamer App",
-        "about_body": "Streamer App versi 2.1\n\nPemutar audio dan media aksesibel untuk pengguna pembaca layar dan kreator streaming.\nDilengkapi dukungan Mode Standar, Mode Lanjutan, pengatur waktu tidur, pergantian bahasa instan, dan pembaruan aplikasi.",
+        "about_body": "Streamer App versi 2.2\n\nPemutar audio dan media aksesibel untuk pengguna pembaca layar dan kreator streaming.\nDilengkapi dukungan Mode Standar, Mode Lanjutan, pengatur waktu tidur, pergantian bahasa instan, dan pembaruan aplikasi.",
     },
 
     "en": {
@@ -626,6 +632,8 @@ TRANSLATIONS = {
         "label_volume_tip": "Player volume label",
         "slider_volume_name": "Volume Slider",
         "slider_volume_tip": "Adjust audio volume level (0 to 150%)",
+        "edit_volume_name": "Manual Volume Input (%)",
+        "edit_volume_tip": "Type a volume value (0 to {max_vol}%) and press Enter to fade smoothly over the fading duration",
         "label_device": "Audio Device:",
         "label_device_tip": "Audio output device label",
         "choice_device_name": "Audio Device Selection",
@@ -692,6 +700,10 @@ TRANSLATIONS = {
         "spk_audio_muted": "Audio muted.",
         "spk_audio_unmuted": "Audio unmuted.",
         "spk_vol_level": "Volume {val} percent.",
+        "spk_vol_fading": "Fading volume to {val} percent over {dur} seconds.",
+        "spk_vol_already": "Volume is already {val} percent.",
+        "spk_vol_invalid": "Invalid volume input. Enter a number between 0 and {max_vol}.",
+        "spk_vol_out_of_range": "Volume value must be between 0 and {max_vol} percent.",
         "spk_dev_set": "Audio device set to {name}.",
         "spk_dev_refreshed": "Audio devices rescanned. Found {count} devices.",
         "spk_marker_saved": "Stream marker saved.",
@@ -865,7 +877,7 @@ TRANSLATIONS = {
 
         # About Dialog
         "about_title": "About Streamer App",
-        "about_body": "Streamer App version 2.1\n\nAccessible audio and media player for screen reader users and streamers.\nFeatures Standard Mode, Advanced Mode, sleep timer, instant live language switching, and application updates.",
+        "about_body": "Streamer App version 2.2\n\nAccessible audio and media player for screen reader users and streamers.\nFeatures Standard Mode, Advanced Mode, sleep timer, instant live language switching, and application updates.",
     }
 }
 
